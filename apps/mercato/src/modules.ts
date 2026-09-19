@@ -79,6 +79,9 @@ export const enabledModules: ModuleEntry[] = [
     id: 'logistics',
     from: '@app',
     overrides: {
+      nav: {
+        groupOrder: ['logistics.nav.group'],
+      },
       routes: {
         pages: {
           '/backend/inbox-ops': {

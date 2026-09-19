@@ -8,6 +8,10 @@ describe('Inbox Ops Logistics navigation override', () => {
   const logisticsModule = enabledModules.find((entry) => entry.id === 'logistics')
   const pages = logisticsModule?.overrides?.routes?.pages as Record<string, PageOverride | null> | undefined
 
+  test('places the Logistics group before other sidebar groups', () => {
+    expect(logisticsModule?.overrides?.nav?.groupOrder).toEqual(['logistics.nav.group'])
+  })
+
   test('places the canonical proposals page in the Logistics group', () => {
     expect(pages?.['/backend/inbox-ops']?.metadata).toMatchObject({
       pageGroup: 'Logistics',
