@@ -75,7 +75,54 @@ export const moduleOverrideExamples: ModuleOverrides = {
 // Lean base always registered. With OM_SLIM_DEV_MODULES=true this is the whole set
 // (plus official/enterprise/S3 gated pushes below). Cuts the Turbopack cold graph.
 export const enabledModules: ModuleEntry[] = [
-  { id: 'logistics', from: '@app' },
+  {
+    id: 'logistics',
+    from: '@app',
+    overrides: {
+      routes: {
+        pages: {
+          '/backend/inbox-ops': {
+            metadata: {
+              pageGroup: 'Logistics',
+              pageGroupKey: 'logistics.nav.group',
+              pageOrder: 10,
+              breadcrumb: [{ label: 'Logistics', labelKey: 'logistics.nav.group' }],
+            },
+          },
+          '/backend/inbox-ops/proposals/[id]': {
+            metadata: {
+              pageGroup: 'Logistics',
+              pageGroupKey: 'logistics.nav.group',
+              breadcrumb: [
+                { label: 'Logistics', labelKey: 'logistics.nav.group' },
+                { label: 'Proposal', labelKey: 'inbox_ops.nav.proposal_detail' },
+              ],
+            },
+          },
+          '/backend/inbox-ops/settings': {
+            metadata: {
+              pageGroup: 'Logistics',
+              pageGroupKey: 'logistics.nav.group',
+              breadcrumb: [
+                { label: 'Logistics', labelKey: 'logistics.nav.group' },
+                { label: 'Settings', labelKey: 'inbox_ops.nav.settings' },
+              ],
+            },
+          },
+          '/backend/inbox-ops/log': {
+            metadata: {
+              pageGroup: 'Logistics',
+              pageGroupKey: 'logistics.nav.group',
+              breadcrumb: [
+                { label: 'Logistics', labelKey: 'logistics.nav.group' },
+                { label: 'Processing Log', labelKey: 'inbox_ops.nav.log' },
+              ],
+            },
+          },
+        },
+      },
+    },
+  },
   { id: 'dashboards', from: '@open-mercato/core' },
   { id: 'auth', from: '@open-mercato/core' },
   { id: 'directory', from: '@open-mercato/core' },

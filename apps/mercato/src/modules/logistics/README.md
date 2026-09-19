@@ -27,10 +27,12 @@ notifications and indexing are released after commit and discarded after rollbac
 The prices are transport custom fields; the panel does not create invoice lines or
 settlement documents.
 
-The two visible navigation entries use `/backend/logistics/transports` and
-`/backend/logistics/proposals-disruptions`. The root URL and
-`/backend/logistics/ai-inbox` remain hidden redirect aliases to the canonical
-**AI Inbox Actions → Proposals** page.
+The Logistics group contains the canonical Inbox Ops **Proposals** page at
+`/backend/inbox-ops`, plus `/backend/logistics/transports` and
+`/backend/logistics/proposals-disruptions`. An app-level route metadata override
+places Inbox Ops list, detail, settings, and log pages in the Logistics group without
+coupling the reusable core module to Logistics. The root URL and
+`/backend/logistics/ai-inbox` remain hidden redirect aliases.
 
 Legacy URLs `fleet`, `trips`, `map`, and `statistics` remain accessible under
 `/backend/logistics` and continue to show planned capabilities. They are hidden from
