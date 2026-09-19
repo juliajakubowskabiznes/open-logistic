@@ -46,3 +46,9 @@ These are author resolutions of specific counterexamples; independent final revi
 - DA01–DA12 copied verbatim from the independent reviewer and challenged by PM in section 7; accepted with bounded interpretations because they protect the manual operating loop, identity or metric integrity. They remain unexecuted release requirements.
 - Story reviewer independently closed R2-C1 and workflow F1–F5. Architect2 independently closed estimate A2 and confirmed existing capability/module reuse, leaving only B1. Final independent review will verify the latest specific fixes and rollout; this author note is not approval.
 - Local validation: parent independently reproduced both latest planner counterexamples against actual availabilityMerge.ts and checked 33-commit arithmetic. These are source probes, not application-suite passes. Yarn suite remains unavailable without node_modules state.
+
+## Final review (ab649bdb / 6175f481a)
+
+- Context/identity, workflow/UX and story/criteria passed independently as App Spec gates. S-C1 and S-W1 closed; previous R2-C1 and F1–F5 closures retained. Rollout content itself passed, with final readiness dependent on the remaining architecture precision fix.
+- F-B1 accepted: supported DTSTART now has exact YYYYMMDDTHHmm00Z form, zero seconds and no fractions. Reject seconds before the integral-minute crossing calculation, without truncation/rounding. C09b/LOG-OP-01 must cover the 16:00:30+8h unsupported input and 16:00:00+8h exact-midnight supported boundary against the same next-day unavailable override.
+- This is a bounded input-contract clarification, not a core change or new feature. Targeted independent closure remains required; no implementation/runtime pass is claimed.
