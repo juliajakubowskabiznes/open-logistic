@@ -31,6 +31,12 @@ import { metadata as proposalsDisruptionsMetadata } from '../backend/logistics/p
 
 jest.mock('next/navigation', () => ({ redirect: jest.fn() }))
 jest.mock('../components/TransportsTable', () => ({ TransportsTable: () => <div data-testid="transports-table" /> }))
+jest.mock('../components/TransportOrderRouteMap', () => ({
+  TransportOrderRouteMap: () => <div data-testid="transport-order-route-map" />,
+}))
+jest.mock('../components/LogisticsAgentInbox', () => ({
+  LogisticsAgentInbox: () => <div data-testid="logistics-agent-inbox" />,
+}))
 jest.mock('@open-mercato/ui/backend/utils/apiCall', () => ({
   readApiResultOrThrow: jest.fn(async () => ({ items: [], total: 0 })),
   apiCallOrThrow: jest.fn(async () => ({ ok: true, result: { order: null }, status: 200 })),
@@ -86,7 +92,7 @@ describe('Logistics navigation foundation', () => {
 
   describe.each(['en', 'pl', 'de', 'es', 'ko'] as const)('%s locale', (locale) => {
     const dict = dictionaries[locale]
-    test.each(pages.slice(4))('$path displays its translated purpose and honest availability', ({ id, Component }) => {
+    test.each(pages.slice(4, 8))('$path displays its translated purpose and honest availability', ({ id, Component }) => {
       const { container } = render(
         <I18nProvider locale={locale} dict={dict}>
           <Component />
@@ -120,6 +126,17 @@ describe('Logistics navigation foundation', () => {
       expect(screen.getByTestId('logistics-orders-demo')).toHaveTextContent(dict['logistics.orders.createWawPoz'])
       expect(screen.getByTestId('logistics-orders-from-inbox')).toHaveTextContent(dict['logistics.orders.importInbox'])
       expect(screen.getByRole('link', { name: dict['logistics.back'] })).toHaveAttribute('href', '/backend/logistics')
+    })
+
+    test('proposals page exposes the agent inbox', () => {
+      const ProposalsDisruptionsPage = proposalsDisruptionsPage
+      render(
+        <I18nProvider locale={locale} dict={dict}>
+          <ProposalsDisruptionsPage />
+        </I18nProvider>,
+      )
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(dict['logistics.proposalsDisruptions.title'])
+      expect(screen.getByTestId('logistics-agent-inbox')).toBeInTheDocument()
     })
   })
 })

@@ -105,6 +105,8 @@ export const enabledModules: ModuleEntry[] = [
   { id: 'scheduler', from: '@open-mercato/scheduler' },
   { id: 'webhooks', from: '@open-mercato/webhooks' },
   { id: 'trans_inbox', from: '@app' },
+  // Needed for logistics A2/A3 AiChat + /api/ai_assistant/* even in slim DX mode.
+  { id: 'ai_assistant', from: '@open-mercato/ai-assistant' },
 ]
 
 // Full catalog extras — skipped when OM_SLIM_DEV_MODULES=true.
@@ -133,7 +135,6 @@ if (!parseBooleanWithDefault(process.env.OM_SLIM_DEV_MODULES, false)) {
     // Fans out to `devices` tokens and sends through the `communication_channels` hub.
     { id: 'push_notifications', from: '@open-mercato/core' },
     { id: 'phone_calls', from: '@open-mercato/core' },
-    { id: 'ai_assistant', from: '@open-mercato/ai-assistant' },
     // agent_orchestrator moved to the enterprise catalog — enabled below behind
     // OM_ENABLE_ENTERPRISE_MODULES + OM_ENABLE_ENTERPRISE_MODULES_AGENTS.
     { id: 'payment_gateways', from: '@open-mercato/core' },

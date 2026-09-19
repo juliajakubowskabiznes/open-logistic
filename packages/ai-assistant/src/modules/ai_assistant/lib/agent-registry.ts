@@ -1,4 +1,5 @@
 /// <reference path="./ai-agents-generated.d.ts" />
+import fs from 'node:fs'
 import { createLogger } from '@open-mercato/shared/lib/logger'
 import { llmProviderRegistry } from './llm-registry'
 import type { AiAgentDefinition, AiAgentExtension, AiAgentSuggestion } from './ai-agent-definition'
@@ -16,6 +17,18 @@ const logger = createLogger('ai_assistant')
 
 const agentsById = new Map<string, AiAgentDefinition>()
 let loaded = false
+/** Content of `ai-agents.generated.checksum` when the registry was last populated. */
+let loadedChecksum: string | null = null
+
+function readAgentsGeneratedChecksum(): string | null {
+  const checksumPath = findGeneratedFile('ai-agents.generated.checksum')
+  if (!checksumPath) return null
+  try {
+    return fs.readFileSync(checksumPath, 'utf8')
+  } catch {
+    return null
+  }
+}
 
 /**
  * Import the generated `ai-agents.generated.ts` registry.
@@ -30,21 +43,29 @@ let loaded = false
  *     `meta.list_agents` / `meta.describe_agent` tools return an empty agent
  *     registry over MCP.
  *
+ * Pass `preferDisk: true` after a checksum change / force reload so we do not
+ * reuse a stale ESM module instance that Next cached before `yarn generate`.
+ *
  * Returns `null` when no generated file exists (pre-generate builds, tests).
  */
-async function importGeneratedAiAgentsModule(): Promise<Record<string, unknown> | null> {
-  try {
-    return (await import(
-      '@/.mercato/generated/ai-agents.generated'
-    )) as Record<string, unknown>
-  } catch {
-    const tsPath = findGeneratedFile('ai-agents.generated.ts')
-    if (!tsPath) return null
-    // App-source modules (apps/<app>/src/modules/*/ai-agents.ts) are .ts that
-    // node cannot import directly — bundle their sources so one app-source agent
-    // does not abort the whole registry.
-    return compileAndImportGenerated(tsPath, { bundleLocalModules: true })
+async function importGeneratedAiAgentsModule(options?: {
+  preferDisk?: boolean
+}): Promise<Record<string, unknown> | null> {
+  if (!options?.preferDisk) {
+    try {
+      return (await import(
+        '@/.mercato/generated/ai-agents.generated'
+      )) as Record<string, unknown>
+    } catch {
+      // fall through to disk compile
+    }
   }
+  const tsPath = findGeneratedFile('ai-agents.generated.ts')
+  if (!tsPath) return null
+  // App-source modules (apps/<app>/src/modules/*/ai-agents.ts) are .ts that
+  // node cannot import directly — bundle their sources so one app-source agent
+  // does not abort the whole registry.
+  return compileAndImportGenerated(tsPath, { bundleLocalModules: true })
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -202,9 +223,9 @@ function populateFromAgents(agents: unknown[]): void {
   }
 }
 
-async function loadOverrideEntries(): Promise<AiAgentOverrideConfigEntry[]> {
+async function loadOverrideEntries(preferDisk = false): Promise<AiAgentOverrideConfigEntry[]> {
   try {
-    const mod = (await importGeneratedAiAgentsModule()) as {
+    const mod = (await importGeneratedAiAgentsModule({ preferDisk })) as {
       aiAgentOverrideEntries?: unknown[]
     } | null
     return mod && Array.isArray(mod.aiAgentOverrideEntries)
@@ -228,9 +249,9 @@ function applyOverridesToRegistry(entries: readonly AiAgentOverrideConfigEntry[]
   }
 }
 
-async function loadExtensionEntries(): Promise<AiAgentExtension[]> {
+async function loadExtensionEntries(preferDisk = false): Promise<AiAgentExtension[]> {
   try {
-    const mod = (await importGeneratedAiAgentsModule()) as {
+    const mod = (await importGeneratedAiAgentsModule({ preferDisk })) as {
       aiAgentExtensionEntries?: unknown[]
     } | null
     const entries =
@@ -279,25 +300,80 @@ function applyExtensionsToRegistry(extensions: readonly AiAgentExtension[]): voi
   }
 }
 
-export async function loadAgentRegistry(): Promise<void> {
-  if (loaded) return
+export async function loadAgentRegistry(options?: { force?: boolean }): Promise<void> {
+  const checksum = readAgentsGeneratedChecksum()
+  const checksumChanged = checksum != null && checksum !== loadedChecksum
+  if (loaded && !options?.force && !checksumChanged) return
+
+  // Prefer the Next `@/` import first (works in the app runtime). Only fall
+  // back to on-disk esbuild compile when forcing a reload after generate —
+  // and NEVER wipe the in-memory map until a non-empty replacement arrives,
+  // otherwise a failed disk compile leaves the registry permanently empty.
+  const tryDisk = Boolean(options?.force || checksumChanged)
   try {
-    const mod = (await importGeneratedAiAgentsModule()) as {
+    let mod = (await importGeneratedAiAgentsModule({ preferDisk: false })) as {
       allAiAgents?: unknown[]
     } | null
-    const agents = mod && Array.isArray(mod.allAiAgents) ? mod.allAiAgents : []
+    let agents = mod && Array.isArray(mod.allAiAgents) ? mod.allAiAgents : []
+
+    if (tryDisk && agents.length === 0) {
+      try {
+        mod = (await importGeneratedAiAgentsModule({ preferDisk: true })) as {
+          allAiAgents?: unknown[]
+        } | null
+        agents = mod && Array.isArray(mod.allAiAgents) ? mod.allAiAgents : []
+      } catch (diskError) {
+        logger.warn('AI Agents — Disk reload failed; keeping previous registry', { err: diskError })
+      }
+    } else if (tryDisk) {
+      // `@/` may be a stale ESM instance from before yarn generate. Re-read from
+      // disk and replace when the disk copy has MORE agents (or any agents if
+      // current map is empty).
+      try {
+        const diskMod = (await importGeneratedAiAgentsModule({ preferDisk: true })) as {
+          allAiAgents?: unknown[]
+        } | null
+        const diskAgents =
+          diskMod && Array.isArray(diskMod.allAiAgents) ? diskMod.allAiAgents : []
+        if (diskAgents.length > agents.length || (agentsById.size === 0 && diskAgents.length > 0)) {
+          agents = diskAgents
+          logger.info('AI Agents — Registry reloaded from disk', {
+            agentCount: diskAgents.length,
+            force: Boolean(options?.force),
+            checksumChanged,
+          })
+        }
+      } catch (diskError) {
+        logger.warn('AI Agents — Disk reload failed; using @/ import', { err: diskError })
+      }
+    }
+
+    if (agents.length === 0) {
+      if (agentsById.size > 0) {
+        logger.warn('AI Agents — Reload returned 0 agents; keeping previous registry', {
+          previousCount: agentsById.size,
+        })
+        loaded = true
+        return
+      }
+      logger.warn('AI Agents — Registry empty after load')
+    }
+
+    agentsById.clear()
     populateFromAgents(agents)
-  } catch (error) {
-    logger.error('AI Agents — Could not load ai-agents.generated.ts (agent registry empty)', { err: error })
-  } finally {
+
     try {
-      const overrideEntries = await loadOverrideEntries()
+      const overrideEntries = await loadOverrideEntries(tryDisk && agents.length > 0)
       applyOverridesToRegistry(overrideEntries)
-      const extensionEntries = await loadExtensionEntries()
+      const extensionEntries = await loadExtensionEntries(tryDisk && agents.length > 0)
       applyExtensionsToRegistry(extensionEntries)
     } catch (error) {
       logger.error('AI Agents — Failed to apply agent overrides/extensions', { err: error })
     }
+  } catch (error) {
+    logger.error('AI Agents — Could not load ai-agents.generated.ts (agent registry empty)', { err: error })
+  } finally {
+    loadedChecksum = checksum
     loaded = true
   }
 }
@@ -321,6 +397,7 @@ export function listAgentsByModule(moduleId: string): AiAgentDefinition[] {
 export function resetAgentRegistryForTests(): void {
   agentsById.clear()
   loaded = false
+  loadedChecksum = null
 }
 
 /**

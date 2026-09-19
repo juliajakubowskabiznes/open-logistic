@@ -152,3 +152,32 @@ export function freightQuoteCreate(ctx: GenCtx) {
     remark: `Quote from OM sim ${ctx.batchId}`,
   }
 }
+
+export function vehicleSpaceSearch(ctx: GenCtx) {
+  const rand = rng(ctx)
+  const origin = pick(rand, [...CITIES])
+  return {
+    firstResult: 0,
+    maxResults: Number(ctx.vars?.maxResults ?? 30),
+    inclusiveRightUpperBoundDateTime: isoDaysFromNow(rand, 1, 7),
+    startLocation: {
+      objectType: 'area',
+      area: {
+        objectType: 'circle',
+        center: {
+          latitude: Number(ctx.vars?.lat ?? origin.lat),
+          longitude: Number(ctx.vars?.lng ?? origin.lon),
+        },
+        radius_km: Number(ctx.vars?.radiusKm ?? 80),
+      },
+    },
+  }
+}
+
+export function freightQuoteAccept(ctx: GenCtx) {
+  return {
+    publicOfferId: String(ctx.vars?.publicOfferId ?? externalId(ctx, 'FO')),
+    accepted_freight_quote_id: String(ctx.vars?.quoteId ?? externalId(ctx, 'FQ')),
+    note: 'OM sim accept quote (maps to DELETE my-freight-offers?accepted_freight_quote_id=)',
+  }
+}

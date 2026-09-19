@@ -7,7 +7,7 @@ import { getAuthFromRequest } from '@open-mercato/shared/lib/auth/server'
 import { createRequestContainer } from '@open-mercato/shared/lib/di/container'
 import type { RbacService } from '@open-mercato/core/modules/auth/services/rbacService'
 import { llmProviderRegistry } from '../../../lib/llm-registry'
-import { loadAgentRegistry } from '../../../lib/agent-registry'
+import { getAgent, loadAgentRegistry } from '../../../lib/agent-registry'
 import { checkAgentPolicy, type AgentPolicyDenyCode } from '../../../lib/agent-policy'
 import {
   runAiAgentText,
@@ -465,6 +465,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       tenantId: auth.tenantId,
       organizationId: auth.orgId,
     })
+
+    if (!getAgent(agentId) && process.env.NODE_ENV !== 'production') {
+      await loadAgentRegistry({ force: true })
+    }
 
     const decision = checkAgentPolicy({
       agentId,

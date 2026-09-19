@@ -1,0 +1,44 @@
+name: agent-exchange
+description: Smoke payloads for agent exchange flows → OM inbox (accept/search/publish)
+target:
+  baseUrl: ${TARGET_BASE_URL:-http://127.0.0.1:3000}
+  headers:
+    Authorization: Basic ${TIMOCOM_SIM_BASIC:-dGVzdDp0ZXN0}
+    Content-Type: application/vnd.freight-exchange.v3+json
+    Accept: application/vnd.freight-exchange.v3+json
+    X-Timocom-Sim: "1"
+    X-Om-Tenant-Id: ${TRANS_INBOX_TENANT_ID:-}
+  pathMap:
+    "POST /freight-exchange/3/my-freight-offers": /api/integrations/timocom/webhooks/freight-offer
+    "POST /freight-exchange/3/freight-offers/search": /api/integrations/timocom/webhooks/freight-search
+    "POST /freight-exchange/3/my-vehicle-space-offers": /api/integrations/timocom/webhooks/vehicle-space
+    "POST /freight-exchange/3/vehicle-space-offers/search": /api/integrations/timocom/webhooks/vehicle-search
+    "DELETE /freight-exchange/3/my-freight-offers/{publicOfferId}": /api/integrations/timocom/webhooks/offer-accept
+defaults:
+  concurrency: 4
+  timeoutMs: 15000
+batches:
+  - id: publish-demand
+    count: 2
+    template: freight.offer.publish
+    vars:
+      currency: EUR
+  - id: search-freights
+    count: 1
+    template: freight.offer.search
+    vars:
+      radiusKm: 60
+  - id: publish-vehicles
+    count: 2
+    template: vehicle.space.publish
+  - id: search-vehicles
+    count: 1
+    template: vehicle.space.search
+    vars:
+      lat: 51.7592
+      lng: 19.456
+      radiusKm: 80
+  - id: accept-quote
+    count: 1
+    template: freight.quote.accept
+reportPath: tools/timocom-api-simulator/.reports/agent-exchange.ndjson

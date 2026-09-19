@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import type { LogisticsOrder, LogisticsRoute, LogisticsStop } from './types'
-import { WAW_POZ } from './types'
+import type { LogisticsOrder, LogisticsRoute, LogisticsStop, OrderCommercials, VehicleCapacity } from './types'
+import { WAW_POZ, deriveCapacity, deriveCommercials } from './types'
 import { planRoute } from './graphhopper'
 
 const STORE_KEY = '__openMercatoLogisticsOrdersStore__'
@@ -47,6 +47,8 @@ export async function createOrder(input: {
   rawPayload?: unknown
   referenceNumber?: string
   withRoute?: boolean
+  capacity?: Partial<VehicleCapacity>
+  commercials?: Partial<OrderCommercials>
 }): Promise<LogisticsOrder> {
   if (input.stops.length < 2) {
     throw new Error('[internal] Order needs at least pickup + delivery stops')
@@ -76,6 +78,8 @@ export async function createOrder(input: {
     notes: input.notes,
     stops: input.stops,
     route,
+    capacity: deriveCapacity(input.capacity),
+    commercials: deriveCommercials(input.commercials),
     rawPayload: input.rawPayload,
   }
 
@@ -91,6 +95,18 @@ export async function createWawPozDemo(notes?: string): Promise<LogisticsOrder> 
     notes: notes ?? 'Demo zlecenie Warszawa → Poznań (GraphHopper)',
     source: 'demo',
     withRoute: true,
+    capacity: {
+      maxWeightT: 24,
+      maxLdm: 13.6,
+      usedWeightT: 14,
+      usedLdm: 8,
+    },
+    commercials: {
+      baseRevenueEur: 980,
+      baseCostEur: 620,
+      exchangeFeePct: 0.05,
+      exchangeFeeFlatEur: 15,
+    },
   })
 }
 
@@ -108,6 +124,17 @@ export async function attachRoute(orderId: string): Promise<LogisticsOrder> {
   order.status = order.source === 'inbox' ? 'imported' : 'routed'
   order.updatedAt = new Date().toISOString()
   return order
+}
+
+/**
+ * Upgrade straight-line / offline fallback geometry to a live GraphHopper road path when the
+ * routing service is available. No-op when the order already has `source: 'live'`.
+ */
+export async function upgradeOrderRouteIfNeeded(orderId: string): Promise<LogisticsOrder | null> {
+  const order = getOrder(orderId)
+  if (!order) return null
+  if (order.route?.source === 'live') return order
+  return attachRoute(orderId)
 }
 
 /** Best-effort parse of Trans inbox order / freight payload into stops. */

@@ -113,6 +113,19 @@ yarn trans:sim run tools/trans-api-simulator/scenarios/waw-poz-order.yaml
 The demo API is `GET|POST|DELETE /api/logistics/orders` and requires
 `logistics.view`.
 
+The prototype exchange API under `/api/logistics/exchange/*` provides an endpoint
+catalog, offer acceptance, carrier searches, nearby vehicles and route-corridor
+backloads for the process-local demo. The Carrier Finder
+(`logistics.carrier_finder`) and Load Optimizer (`logistics.load_optimizer`) agents
+use the same demo model. Their background transport runs and human-approval cards are
+available at `/backend/logistics/proposals-disruptions` through
+`/api/logistics/transport-runs/*`. This prototype is separate from the persisted
+Sales-backed transport and decision workflow described above.
+
+See [the simulator playbook](../../../../../.ai/docs/exchange-simulators-agent-playbook.md)
+and [the agent evaluation inputs](../../../../../.ai/docs/logistics-agent-evaluation-inputs.md)
+for the endpoint map, scenarios, model configuration and known production gaps.
+
 ## Verification
 
 ```sh

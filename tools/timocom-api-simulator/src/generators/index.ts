@@ -3,8 +3,10 @@ import {
   freightOfferEvent,
   freightOfferPublish,
   freightOfferSearch,
+  freightQuoteAccept,
   freightQuoteCreate,
   vehicleSpacePublish,
+  vehicleSpaceSearch,
 } from './offers'
 
 export type TemplateFn = (ctx: GenCtx) => unknown
@@ -14,7 +16,9 @@ const TEMPLATES: Record<string, TemplateFn> = {
   'freight.offer.search': freightOfferSearch,
   'freight.offer.event': freightOfferEvent,
   'vehicle.space.publish': vehicleSpacePublish,
+  'vehicle.space.search': vehicleSpaceSearch,
   'freight.quote.create': freightQuoteCreate,
+  'freight.quote.accept': freightQuoteAccept,
   none: () => undefined,
 }
 
@@ -23,7 +27,9 @@ export const TEMPLATE_DEFAULT_OPS: Record<string, string> = {
   'freight.offer.search': 'POST /freight-exchange/3/freight-offers/search',
   'freight.offer.event': 'POST /freight-exchange/3/my-freight-offers',
   'vehicle.space.publish': 'POST /freight-exchange/3/my-vehicle-space-offers',
+  'vehicle.space.search': 'POST /freight-exchange/3/vehicle-space-offers/search',
   'freight.quote.create': 'POST /freight-exchange/3/freight-quotes',
+  'freight.quote.accept': 'DELETE /freight-exchange/3/my-freight-offers/{publicOfferId}',
 }
 
 export function listTemplates(): string[] {

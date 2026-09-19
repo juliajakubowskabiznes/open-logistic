@@ -1,0 +1,31 @@
+name: agent-accept
+description: Trans accept-offer + public freight (looking for carrier) → inbox
+target:
+  baseUrl: ${TARGET_BASE_URL:-http://127.0.0.1:3000}
+  headers:
+    Authorization: Basic ${TRANS_SIM_BASIC:-dGVzdDp0ZXN0}
+    Content-Type: application/json
+    X-Trans-Sim: "1"
+    X-Om-Tenant-Id: ${TRANS_INBOX_TENANT_ID:-}
+  pathMap:
+    "POST /ext/freights-api/v2/freights": /api/integrations/trans/webhooks/freight
+    "POST /ext/freights-api/v1/freights/offers/{id}/accept": /api/integrations/trans/webhooks/offer-accept
+    "POST /ext/vehicles-api/v1/vehicles": /api/integrations/trans/webhooks/vehicle
+defaults:
+  concurrency: 3
+  timeoutMs: 15000
+batches:
+  - id: looking-for-carrier
+    count: 2
+    template: freight.create.public
+    vars:
+      currency: eur
+  - id: accept
+    count: 1
+    template: freight.offer.accept
+    pathParams:
+      id: $uuid
+  - id: vehicles
+    count: 2
+    template: vehicle.create
+reportPath: tools/trans-api-simulator/.reports/agent-accept.ndjson

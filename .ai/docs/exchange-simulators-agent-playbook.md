@@ -50,3 +50,47 @@ yarn trans:sim run tools/trans-api-simulator/scenarios/waw-poz-order.yaml
 ```
 
 Open `/backend/logistics/transport-jobs`, or call `POST /api/logistics/orders` with `{ "action": "demo-waw-poz" }`. The demo order store is process-local and separate from the Sales-backed transport workflow.
+
+## Prototype agent exchange surface
+
+The logistics demo exposes a session-authenticated, `logistics.view`-guarded API for
+evaluating carrier and backload workflows. These endpoints operate on the demo order
+and transport-run stores; they do not replace the Sales-backed dispatcher APIs.
+
+| Tool | HTTP endpoint | Purpose |
+| --- | --- | --- |
+| `logistics.orders.create_waw_poz` | `POST /api/logistics/orders` with `demo-waw-poz` | Create a routed demo order |
+| `logistics.orders.import_inbox` | `POST /api/logistics/orders` with `from-inbox` | Import the synthetic Trans order |
+| `logistics.orders.list` | `GET /api/logistics/orders` | List routed demo orders |
+| `exchange.offers.list` | `GET /api/logistics/exchange/offers` | List exchange offers |
+| `exchange.offer.accept` | `POST /api/logistics/exchange/accept` | Accept an offer |
+| `exchange.publish_carrier_search` | `POST /api/logistics/exchange/publish-carrier-search` | Publish a carrier search |
+| `exchange.search_free_vehicles` | `POST /api/logistics/exchange/search-vehicles` | Find vehicles near a locality |
+| `exchange.search_backloads` | `POST /api/logistics/exchange/search-backloads` | Score backloads along a route |
+
+`GET /api/logistics/exchange/catalog` returns the endpoint catalog. Backload search
+samples the GraphHopper corridor and evaluates nearby synthetic freight and vehicle
+offers. The score includes capacity fit and estimated economics; the accept/skip
+decision remains with the agent or human reviewer. See
+[`logistics-agent-evaluation-inputs.md`](logistics-agent-evaluation-inputs.md) for the
+evaluation fields and production gaps.
+
+Two optional agents are registered:
+
+| Agent | ID | Role |
+| --- | --- | --- |
+| Carrier Finder | `logistics.carrier_finder` | Turn an agreed client offer into a carrier proposal |
+| Load Optimizer | `logistics.load_optimizer` | Find additional loads along the active route |
+
+The HITL view is `/backend/logistics/proposals-disruptions`; transport-run endpoints
+advance background steps and expose approval cards. Configure an OpenRouter model with
+`OPENROUTER_API_KEY`, `OM_AI_LOGISTICS_PROVIDER=openrouter`, and
+`OM_AI_LOGISTICS_MODEL=openrouter/openrouter/free` when exercising the optional LLM
+path.
+
+Synthetic exchange inputs for this flow are available through:
+
+```sh
+yarn timocom:sim run tools/timocom-api-simulator/scenarios/agent-exchange.yaml
+yarn trans:sim run tools/trans-api-simulator/scenarios/agent-accept.yaml
+```

@@ -7,7 +7,7 @@ import { getAuthFromRequest } from '@open-mercato/shared/lib/auth/server'
 import { createRequestContainer } from '@open-mercato/shared/lib/di/container'
 import type { RbacService } from '@open-mercato/core/modules/auth/services/rbacService'
 import { llmProviderRegistry } from '../../../../../lib/llm-registry'
-import { getAgent, loadAgentRegistry } from '../../../../../lib/agent-registry'
+import { getAgent, listAgents, loadAgentRegistry } from '../../../../../lib/agent-registry'
 import { hasRequiredFeatures } from '../../../../../lib/auth'
 import { createModelFactory, resolveAllowRuntimeOverride } from '../../../../../lib/model-factory'
 import {
@@ -115,9 +115,25 @@ export async function GET(
       organizationId: auth.orgId,
     })
 
-    const agent = getAgent(agentId)
+    let agent = getAgent(agentId)
+    // Dev: registry may have been cached before `yarn generate` added this
+    // agent — force a disk reload once on miss so AiChat models picker works
+    // without restarting the Next process.
+    if (!agent && process.env.NODE_ENV !== 'production') {
+      await loadAgentRegistry({ force: true })
+      agent = getAgent(agentId)
+    }
     if (!agent) {
-      return NextResponse.json({ error: `Agent "${agentId}" not found.`, code: 'agent_unknown' }, { status: 404 })
+      return NextResponse.json(
+        {
+          error: `Agent "${agentId}" not found.`,
+          code: 'agent_unknown',
+          registeredAgents: listAgents().map((entry) => entry.id),
+          hint:
+            'If you just added this agent, restart `yarn dev` so the generated ai-agents registry is re-imported.',
+        },
+        { status: 404 },
+      )
     }
 
     const agentFeatures = agent.requiredFeatures ?? []

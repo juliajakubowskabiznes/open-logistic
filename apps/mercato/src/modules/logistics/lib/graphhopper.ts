@@ -80,6 +80,42 @@ function isWawPoz(from: LatLng, to: LatLng): boolean {
   )
 }
 
+function haversineM(a: LatLng, b: LatLng): number {
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const r = 6_371_000
+  const dLat = toRad(b.lat - a.lat)
+  const dLng = toRad(b.lng - a.lng)
+  const lat1 = toRad(a.lat)
+  const lat2 = toRad(b.lat)
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return 2 * r * Math.asin(Math.min(1, Math.sqrt(h)))
+}
+
+/** Offline fallback for any lane when live GraphHopper is down. */
+function synthesizeCorridor(from: LatLng, to: LatLng, steps = 48): LogisticsRoute {
+  const coordinates: [number, number][] = []
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps
+    coordinates.push([from.lng + (to.lng - from.lng) * t, from.lat + (to.lat - from.lat) * t])
+  }
+  const distanceM = Math.round(haversineM(from, to) * 1.18)
+  const timeMs = Math.round((distanceM / 18) * 1000)
+  return {
+    provider: 'graphhopper',
+    source: 'synthetic',
+    profile: 'car',
+    distanceM,
+    timeMs,
+    points: { type: 'LineString', coordinates },
+    instructions: [
+      { text: `Head toward ${to.name || 'destination'} (offline straight-line — start GraphHopper for road geometry)`, distanceM, timeMs },
+    ],
+    from: { ...from },
+    to: { ...to },
+  }
+}
+
 export async function planRoute(from: LatLng, to: LatLng): Promise<LogisticsRoute> {
   const base = (process.env.GRAPHHOPPER_URL || 'http://127.0.0.1:8989').replace(/\/$/, '')
   const url =
@@ -114,7 +150,7 @@ export async function planRoute(from: LatLng, to: LatLng): Promise<LogisticsRout
       from: { ...from },
       to: { ...to },
     }
-  } catch (err) {
+  } catch {
     if (isWawPoz(from, to)) {
       const fixture = loadFixture()
       return {
@@ -123,9 +159,6 @@ export async function planRoute(from: LatLng, to: LatLng): Promise<LogisticsRout
         to: { ...to, name: to.name || fixture.to.name },
       }
     }
-    throw new Error(
-      `[internal] GraphHopper unreachable (${err instanceof Error ? err.message : String(err)}). ` +
-        `Run yarn graphhopper:setup or use Warszawa→Poznań (fixture fallback).`,
-    )
+    return synthesizeCorridor(from, to)
   }
 }
