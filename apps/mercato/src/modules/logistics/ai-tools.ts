@@ -4,7 +4,8 @@
  * HITL mirrors offer_automation: agent proposes, human gates on
  * `/backend/logistics/proposals-disruptions` (not auto-executed).
  */
-import { defineAiTool } from '@open-mercato/ai-assistant'
+import { defineAiTool } from '@open-mercato/ai-assistant/modules/ai_assistant/lib/ai-tool-definition'
+import type { AiToolDefinition } from '@open-mercato/ai-assistant/types'
 import { z } from 'zod'
 import {
   advanceTruckAndScanBackloads,
@@ -27,7 +28,16 @@ import { listOpenOffers } from './lib/exchange'
 
 const FEATURES = ['logistics.view'] as const
 
-const startFromAgreedOffer = defineAiTool({
+function defineLogisticsTool<TSchema extends z.ZodType, TOutput>(
+  tool: Omit<AiToolDefinition<z.output<TSchema>, TOutput>, 'inputSchema'> & { inputSchema: TSchema },
+): AiToolDefinition<z.output<TSchema>, TOutput> {
+  return defineAiTool<z.output<TSchema>, TOutput>({
+    ...tool,
+    inputSchema: tool.inputSchema as z.ZodType<z.output<TSchema>>,
+  })
+}
+
+const startFromAgreedOffer = defineLogisticsTool({
   name: 'logistics.start_from_agreed_offer',
   displayName: 'Start from agreed offer',
   description:
@@ -57,7 +67,7 @@ const startFromAgreedOffer = defineAiTool({
   },
 })
 
-const listRuns = defineAiTool({
+const listRuns = defineLogisticsTool({
   name: 'logistics.list_transport_runs',
   displayName: 'List transport runs',
   description: 'List recent transport orchestration runs and their HITL status.',
@@ -79,7 +89,7 @@ const listRuns = defineAiTool({
   },
 })
 
-const getRun = defineAiTool({
+const getRun = defineLogisticsTool({
   name: 'logistics.get_transport_run',
   displayName: 'Get transport run',
   description: 'Full snapshot of a transport run including agreed offer, proposals, truck position.',
@@ -93,7 +103,7 @@ const getRun = defineAiTool({
   },
 })
 
-const searchVehicles = defineAiTool({
+const searchVehicles = defineLogisticsTool({
   name: 'logistics.search_vehicles_for_run',
   displayName: 'Search free vehicles (active)',
   description:
@@ -116,7 +126,7 @@ const searchVehicles = defineAiTool({
   },
 })
 
-const publishListing = defineAiTool({
+const publishListing = defineLogisticsTool({
   name: 'logistics.publish_carrier_listing',
   displayName: 'Publish carrier search (passive)',
   description:
@@ -141,7 +151,7 @@ const publishListing = defineAiTool({
   },
 })
 
-const listExchangeOffers = defineAiTool({
+const listExchangeOffers = defineLogisticsTool({
   name: 'logistics.list_exchange_offers',
   displayName: 'List exchange offers',
   description: 'Scan open mock exchange freight offers/quotes (third carrier-search source).',
@@ -153,7 +163,7 @@ const listExchangeOffers = defineAiTool({
   },
 })
 
-const proposeCarrierTool = defineAiTool({
+const proposeCarrierTool = defineLogisticsTool({
   name: 'logistics.propose_carrier',
   displayName: 'Propose carrier (HITL)',
   description:
@@ -191,7 +201,7 @@ const proposeCarrierTool = defineAiTool({
   },
 })
 
-const approveCarrierTool = defineAiTool({
+const approveCarrierTool = defineLogisticsTool({
   name: 'logistics.approve_carrier',
   displayName: 'Approve carrier (human2)',
   description: 'Human-in-the-loop: approve pending carrier proposal and unlock delivery.',
@@ -207,7 +217,7 @@ const approveCarrierTool = defineAiTool({
   },
 })
 
-const rejectCarrierTool = defineAiTool({
+const rejectCarrierTool = defineLogisticsTool({
   name: 'logistics.reject_carrier',
   displayName: 'Reject carrier (human2)',
   description: 'Human-in-the-loop: reject pending carrier proposal; carrier finder can search again.',
@@ -223,7 +233,7 @@ const rejectCarrierTool = defineAiTool({
   },
 })
 
-const startDeliveryTool = defineAiTool({
+const startDeliveryTool = defineLogisticsTool({
   name: 'logistics.start_delivery',
   displayName: 'Start delivery',
   description: 'After carrier approved: place truck at origin on GraphHopper route and begin in_transit.',
@@ -241,7 +251,7 @@ const startDeliveryTool = defineAiTool({
   },
 })
 
-const scanBackloads = defineAiTool({
+const scanBackloads = defineLogisticsTool({
   name: 'logistics.scan_backloads_along_route',
   displayName: 'Scan backloads along route',
   description:
@@ -280,7 +290,7 @@ const scanBackloads = defineAiTool({
   },
 })
 
-const advanceAndScan = defineAiTool({
+const advanceAndScan = defineLogisticsTool({
   name: 'logistics.advance_truck_and_scan_backloads',
   displayName: 'Advance truck + scan ahead (legacy)',
   description:
@@ -316,7 +326,7 @@ const advanceAndScan = defineAiTool({
   },
 })
 
-const proposeBackloadTool = defineAiTool({
+const proposeBackloadTool = defineLogisticsTool({
   name: 'logistics.propose_backload',
   displayName: 'Propose backload (HITL)',
   description:
@@ -350,7 +360,7 @@ const proposeBackloadTool = defineAiTool({
   },
 })
 
-const approveBackloadTool = defineAiTool({
+const approveBackloadTool = defineLogisticsTool({
   name: 'logistics.approve_backload',
   displayName: 'Approve backload (human2)',
   description: 'Human-in-the-loop: accept proposed doładunek; updates free capacity & commercials.',
@@ -370,7 +380,7 @@ const approveBackloadTool = defineAiTool({
   },
 })
 
-const rejectBackloadTool = defineAiTool({
+const rejectBackloadTool = defineLogisticsTool({
   name: 'logistics.reject_backload',
   displayName: 'Reject backload (human2)',
   description: 'Human-in-the-loop: reject proposed doładunek; truck continues.',

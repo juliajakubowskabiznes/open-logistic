@@ -8,6 +8,7 @@ import {
   stopsFromInboxBody,
 } from '../../lib/orders-store'
 import { listInboxRequests } from '../../../trans_inbox/lib/inbox-store'
+import { resolveLogisticsRequestContext } from '../../lib/request-context'
 
 export const metadata = {
   GET: {
@@ -105,7 +106,8 @@ export async function POST(req: Request) {
     }
 
     if (parsed.data.action === 'from-inbox') {
-      const feed = listInboxRequests(100)
+      const { scope } = await resolveLogisticsRequestContext(req)
+      const feed = listInboxRequests(scope, 100)
       const match = parsed.data.inboxRequestId
         ? feed.find((i) => i.id === parsed.data.inboxRequestId)
         : feed.find((i) => i.channel === 'order' || i.channel === 'freight')

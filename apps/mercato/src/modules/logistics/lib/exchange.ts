@@ -361,7 +361,11 @@ export function searchBackloadsAlongRoute(input: {
   const samples = sampleCorridor(route.points.coordinates, 55).filter(
     (s) => s.alongKm >= fromAlongKm - 0.5,
   )
-  const dest = route.to
+  const dest = {
+    name: route.to.name ?? 'Destination',
+    lat: route.to.lat,
+    lng: route.to.lng,
+  }
   const candidates: BackloadCandidate[] = []
 
   const capacity = deriveCapacity(order?.capacity)
