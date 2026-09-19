@@ -1,8 +1,8 @@
 # Logistics operations — proposed atomic commit ledger
 
-Source: [operational App Spec](../2026-09-19-app-spec-logistics-operations.md). Estimate only; these are not completed implementation commits or independently releasable workflow phases. All 25 units form one usable release. Every unit includes its relevant unit/API/UI tests and translations, with integration fixtures self-contained.
+Source: [operational App Spec](../2026-09-19-app-spec-logistics-operations.md). Estimate only; these are not completed implementation commits or independently releasable workflow phases. All 25 work packages form one usable release and provisionally require 33 atomic commits, using the explicit splits below. Every atomic increment includes relevant unit/API/UI tests and translations, with integration fixtures self-contained.
 
-| ID | One testable increment | Evidence required | Main workflow |
+| Work package | Scope (atomic splits below) | Evidence required | Main workflow |
 |---|---|---|---|
 | C01 | Vehicle/driver profile entities, owned extensions and migration/snapshot | Only intended schema changes; unique scoped master references and version columns | WF1 |
 | C02 | Profile CRUD commands/APIs, validation and ACL | Scope, source ownership, conflicts and capacity validation tests | WF1 |
@@ -31,3 +31,18 @@ Source: [operational App Spec](../2026-09-19-app-spec-logistics-operations.md). 
 | C25 | Deployment/pilot runbook and complete release verification evidence | Ordered configured validation gate, actual UI QA, baseline collection instructions | All |
 
 All work is app scope except documentation and normal generated/template parity artifacts required by repository conventions. No core/platform edits are estimated. C24 is additional cross-flow validation; it does not defer tests required by C01–C23. API actions and field names remain governed by the App Spec; feature-spec decomposition may regroup commits after final confirmation.
+
+## Atomic sizing after architect checkpoint 1
+
+Every unlisted work package is provisionally one commit (19 total). Split these six packages into 14 commits, for **33 total**, within the reviewer's 31–35 estimate:
+
+| Package | Atomic increments, each with its targeted tests | Count |
+|---|---|---|
+| C08 | C08a reservation/job serialization and conflict APIs; C08b active occupancy + atomic command receipts/replay | 2 |
+| C09 | C09a authorized complete projections, precedence, absence and versions; C09b strict supported-rule validation and interval coverage/observation integration | 2 |
+| C11 | C11a typed fact stream and custody actions; C11b start/finish/resource release lifecycle and receipt integration | 2 |
+| C14 | C14a receiver plan and atomic whole-job custody handover; C14b source interruption and independent resource release/reacquire | 2 |
+| C16 | C16a typed successor/void model and validation; C16b serialized downstream consequences/reconciliation invalidation; C16c guarded correction UI and error paths | 3 |
+| C18 | C18a versioned day-envelope model and entry APIs; C18b exact reconciliation/provenance/conflict computation; C18c reconciliation UI and missing-data repair | 3 |
+
+Sequence C09 before the source-dependent C03 eligibility integration and C08/C10 confirmation integration. These are testable internal increments, not standalone promises that partial custody or recovery can go live. An implementation readiness audit can revise the estimate; the count is neither a delivery date nor a requirement to manufacture commits.

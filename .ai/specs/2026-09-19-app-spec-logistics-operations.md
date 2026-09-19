@@ -320,18 +320,18 @@ Keep the seven existing Logistics sidebar destinations and the app's global land
 
 ## 4. Workflow Gap Analysis `Architect`
 
-Atomic estimates are testable commits, not days or a guarantee of cost. Score convention: 0 existing, 1 configuration, 2 small (1–2 commits), 3 medium (2–3), 4 large (3–5), 5 >5/external dependency. Every C-item is one proposed commit including its targeted tests; linked tests are not postponed to a final testing-only phase. Exact grouping may change after feature design without changing this release's acceptance scope.
+Atomic estimates are testable commits, not days or a guarantee of cost. Score convention: 0 existing, 1 configuration, 2 small (1–2 commits), 3 medium (2–3), 4 large (3–5), 5 >5/external dependency. Each C-item is a work package whose explicit atomic split is in the linked ledger, including targeted tests in each increment; linked tests are not postponed to a final testing-only phase. Exact grouping may change after feature design without changing this release's acceptance scope.
 
 | Workflow | Business priority | New gap score | Raw contributing commits | Reuse / effective accounting | Blocks complete release? |
 |---|---|---|---|---|---|
-| WF1 intake/resources | High, prerequisite | 5 | C01–C05, C09 = 6 | Existing customer/personnel/resource CRUD and planner editor are 0; C09 shared with WF2 | Yes |
-| WF2 plan/assign | Highest direct planning value | 5 | C06–C10, C21–C22 = 7 | Reuses profile/job work; board shared across workflows | Yes |
-| WF3 execute/finish | High, custody and metric source | 4 | C11–C12, C17, C23 = 4 | Receipts/booking from C08; mileage shared with WF5 | Yes |
-| WF4 recover/correct | High, operational completeness | 4 | C13–C16 = 4 | Reuses plan revisions, command/ACL/UI framework | Yes |
-| WF5 measure/reconcile | Highest measurement value | 4 | C17–C20 = 4 | C17 counted once in release total | Yes |
+| WF1 intake/resources | High, prerequisite | 5 | C01–C05, C09 = 7 | Existing customer/personnel/resource CRUD and planner editor are 0; C09 shared with WF2 | Yes |
+| WF2 plan/assign | Highest direct planning value | 5 | C06–C10, C21–C22 = 9 | Reuses profile/job work; board shared across workflows | Yes |
+| WF3 execute/finish | High, custody and metric source | 4 | C11–C12, C17, C23 = 5 | Receipts/booking from C08; mileage shared with WF5 | Yes |
+| WF4 recover/correct | High, operational completeness | 5 | C13–C16 = 7 | Reuses plan revisions, command/ACL/UI framework | Yes |
+| WF5 measure/reconcile | Highest measurement value | 5 | C17–C20 = 6 | C17 counted once in release total | Yes |
 | Cross-workflow hardening/runbook | Required release gate | 2 | C24–C25 = 2 | Cross-scope/race/access tests complement per-commit tests | Yes |
 
-**Unique total: 25 proposed atomic commits**, all app/documentation scope. Raw workflow contributions total 27 because C09 and C17 are shared. Allow estimate revision after feature-spec readiness audits; this is not permission to drop recovery or coverage rules. Detailed [commit ledger](app-spec-notes/logistics-operations-commits.md) defines each unit and proof of completion.
+**Unique total: 25 work packages, provisionally 33 atomic commits**, all app/documentation scope. Raw workflow contributions total 36 atomic commits; shared C09 (2) and C17 (1) are counted once, yielding 33. Allow estimate revision after feature-spec readiness audits; this is not permission to drop recovery or coverage rules. Detailed [commit ledger](app-spec-notes/logistics-operations-commits.md) defines each unit and proof of completion.
 
 **Capability recheck for all >3-commit stories/workflows:** profiles reuse masters and extensions; jobs/trips are new transport entities, not sales orders or generic planner events; assignment exclusivity is absent from the inspected planner service; recovery/custody is domain state, not a generic workflow instance; mileage is actual odometer reconciliation, not a chart problem. DataTable/CrudForm/ScheduleView and command guards eliminate scaffolding work but do not supply these invariants. No proposed shared platform module or new dependency is needed. If checkpoint finds an actual platform gap, investigate its existing specs/upstream PRs read-only before changing scope; no upstream dependency is currently claimed.
 
@@ -359,6 +359,20 @@ One existing app module, `apps/mercato/src/modules/logistics`, owns the domain. 
 Dependency absence is explicit: historical logistics snapshots remain readable; source-dependent creation/confirm/replan/start/handover is disabled if the required source module/service or read grant is unavailable. Already-started trips can record truthful execution/return/finish against persisted snapshots; a transient master failure must not erase custody or prevent finishing physical work. No database joins across module-owned ORM entities; extensions cannot own someone else's source identity.
 
 For source reads, implementation must select an existing sanctioned API or query-engine projection and prove staff absence behavior. An app-local adapter translates source contracts to the observation shape; it is not permission to copy source business logic. Source pages own their own write guards and feature requirements. No provider, external service, enterprise module, production dependency or upstream pointer change is required.
+
+### Source adapter contract (architect checkpoint 1 resolution)
+
+**Authorized reads:** use the existing general resources API (`resources/api/resources.ts`), staff team-members API (`staff/api/team-members.ts`), planner availability API (`planner/api/availability.ts`) and rule-set API (`planner/api/availability-rule-sets.ts`), or their sanctioned query-engine projections with the same source-read feature checks. They expose source identity, active flag, availability-rule-set ID, updatedAt and rule subject/timezone/rrule/exdates/kind/version. Scope is resolved from trusted request context; validate returned tenant/organization and every referenced ID. Read all pages (≤100 per page), record membership and versions, and distinguish a missing/deleted record, an empty rule list and an unavailable/forbidden source. A partial read yields unknown eligibility, never partial availability. Do not use the staff assignable endpoint: it excludes personnel without user accounts and uses customer-specific permissions.
+
+**Schedule precedence:** follow persisted selection behavior of `AvailabilityRulesEditor`: if a subject has any saved custom rules, those rules are authoritative; otherwise use its selected rule-set rules if one is linked. Never union custom and rule-set rules. If neither supplies an available window, there is no eligible coverage. The editor's unsaved `customOverridesEnabled` state is browser-local, not a second server source; unsaved edits do not influence dispatch. An explicitly empty custom schedule must be saved with no linked rule set to remain empty; explain this in the onboarding runbook rather than storing an invented override flag. Observation includes source rule-set linkage and complete selected membership; subsequent selection changes invalidate prior observations. Test custom+linked rules, empty custom fallback, no source, unreadable source and a removed/added rule.
+
+**Supported grammar before merger:** accept only finite valid UTC DTSTART with trailing Z, positive DURATION in integral hours/minutes, DAILY without COUNT or DAILY COUNT=1, and WEEKLY without COUNT. WEEKLY may contain a single BYDAY equal to the DTSTART **UTC** weekday (a redundant producer clause); reject mismatched/multiple/ordinal BYDAY. Reject every other recurrence clause, unsupported date syntax, malformed exclusion or unrecognized kind before invoking the merger, including malformed unavailability. EXDATE accepts only valid ISO UTC instants or exact UTC dates. No silent omission of blockers. All selected rules must pass validation; source labels/timezones do not override their encoded UTC instants.
+
+The reused merger interprets DAILY COUNT=1 as a full UTC calendar day. Accept such a one-off rule only when its encoded start is UTC midnight and its duration is exactly 24 hours, so dispatch does not broaden a partial availability window. Reject unsupported partial/local-day one-off inputs with an actionable explanation and link to the existing schedule editor; do not patch planner or silently expand them. Recurring durations are >0 and ≤24 hours and intervals follow the merger's encoded UTC recurrence. Confirm/replan UI shows the evaluated UTC and local display windows so operators can verify the supported schedule. Production pilot setup must verify actual entered schedules satisfy these semantics; a broader timezone-aware scheduler is outside this app change.
+
+**Examples/tests:** weekly `2026-09-21T08:00Z` with 8h duration and BYDAY=MO covers Monday 08:00–16:00 UTC; a 10:00–11:00 UTC unavailable interval splits it and blocks a booking spanning that gap. An all-day one-off at 00:00Z, duration24h, DAILY COUNT=1 overrides that UTC day; a 10:00Z one-off is rejected rather than becoming a 24h window. Europe/Warsaw display of a weekly 08:00Z rule changes from 10:00 to 09:00 across autumn DST; it does **not** keep an implied 10:00 local recurrence. The source timezone label is preserved for provenance, not promised as recurrence conversion. No rules/error/unsupported rules must never display available. Coverage checking unions valid returned windows within the requested interval; it does not expand new recurrence itself.
+
+**Transaction and delivery boundary:** logistics locks/receipts/state use one outer transaction with explicit atomic flushing; emit/index all affected entities only after that outer transaction commits. A nested CRUD helper returning is not proof of outer commit. Existing event delivery plus authoritative refresh is sufficient for the board; do not add a custom persistent queue/outbox just for invalidation. If a post-commit event fails, the persisted receipt and domain state remain authoritative and retry must not repeat the business action.
 
 - [x] Module ownership, existing capabilities and extension seams identified.
 - [x] No new generic framework or unauthorized core modifications proposed.
@@ -447,24 +461,24 @@ Capability ladder applied in order: existing feature → config/setup → sancti
 
 | Story | First existing match; residual domain gap | Contributing atomic commits |
 |---|---|---|
-| US01 | Existing masters/editor; profile extension and UI | C01–C03, C09 (4; shared source adapter) |
+| US01 | Existing masters/editor; profile extension and UI | C01–C03, C09 (5; shared source adapter) |
 | US02 | CRUD reference/commands; transport input/state and job UI | C04–C05 (2) |
 | US03 | CrudForm/DataTable; ordered transport draft/load preview | C06–C07 (2) |
-| US04 | Command/transaction/lock helpers; atomic transport exclusivity and observed eligibility | C08–C10 (3) |
+| US04 | Command/transaction/lock helpers; atomic transport exclusivity and observed eligibility | C08–C10 (5) |
 | US05 | Versioned commands/forms; plan/promise history and atomic replacement | C10 (1, reuses C06/C08) |
-| US06 | Guards/command bus; physical departure/occupancy UI | C11–C12 (2) |
-| US07 | Standard action dialog; custody facts and leg boundary | C11–C12, C17 (3) |
+| US06 | Guards/command bus; physical departure/occupancy UI | C11–C12 (3) |
+| US07 | Standard action dialog; custody facts and leg boundary | C11–C12, C17 (4) |
 | US08 | Same execution capability; no new release engine | C11–C12 (shared, 0 extra) |
 | US09 | Existing detail/CRUD components; domain disruption and attempts | C13 (1, reuses C10) |
-| US10 | Forms/command guards; whole-job transfer and recovery UI | C14–C15 (2) |
-| US11 | Conflict helpers/audit; typed correction and effective-history validation | C16 (1, complexity risk: may split after feature audit) |
+| US10 | Forms/command guards; whole-job transfer and recovery UI | C14–C15 (3) |
+| US11 | Conflict helpers/audit; typed correction and effective-history validation | C16a–C16c (3: model/validation, transactional consequences, UI) |
 | US12 | Existing forms; actual ledger and non-trip provenance | C17 (1) |
-| US13 | Existing table/detail; reconciliation rules and UI | C18 (1, complexity risk: may split) |
+| US13 | Existing table/detail; reconciliation rules and UI | C18a–C18c (3: envelope model, reconciliation API, UI) |
 | US14 | Existing configuration/forms/KPI; frozen cohort and ratio rules | C19–C20 (2) |
 | US15 | Existing schedule/table/KPI/filter blocks; board projections/composition/refresh | C21–C23 (3) |
 | US16 | Existing auth/role configuration; additive logistics declarations | 0 standalone; declarations/tests included in owning C-items and C24 |
 
-C24–C25 add cross-flow verification/deployment documentation; union remains 25, not the sum of story rows. US01/US04/US07/US15 were rechecked because ≥3 commits: existing masters, scheduling, events and UI cover scaffolding, but not owned transport profiles, custody or authoritative booking/mileage projections. Workflow automation adds no benefit to these synchronous operator actions; defer that dependency until a real async approval/notification requirement exists. C16/C18 estimates need readiness review because corrections/reconciliation can exceed one focused loop; increasing estimate is preferable to dropping invariants.
+C24–C25 add cross-flow verification/deployment documentation; union remains 33 estimated atomic commits, not the sum of story rows. All ≥3-commit stories (US01/US04/US06/US07/US10/US11/US13/US15) were rechecked: existing masters, scheduling, events and UI cover scaffolding, but not owned transport profiles, custody or authoritative booking/mileage projections. Workflow automation adds no benefit to these synchronous operator actions; defer that dependency until a real async approval/notification requirement exists. C16/C18 are explicitly split into three increments each; feature readiness may refine grouping further without dropping invariants.
 
 No platform-scoped commit is proposed, so no external tracker claim is needed for this mapping. A later architect finding requiring a platform change must be investigated read-only and recorded as a dependency; it cannot be disguised as app work.
 
@@ -475,11 +489,11 @@ No platform-scoped commit is proposed, so no external tracker claim is needed fo
 
 ### Release 1 — Manual dispatch with truthful empty-distance measurement
 
-**Goal:** a dispatcher runs customer request → confirmed multi-job plan → execution → delivery/return/recovery, while a manager can reconcile all fleet movement and evaluate a fixed-cohort empty-km comparison. All sixteen stories and five workflow groups ship together. The 25 C-items are an internal implementation order, not permission to release isolated CRUD pages as a working dispatch system.
+**Goal:** a dispatcher runs customer request → confirmed multi-job plan → execution → delivery/return/recovery, while a manager can reconcile all fleet movement and evaluate a fixed-cohort empty-km comparison. All sixteen stories and five workflow groups ship together. The 25 C-items group 33 proposed atomic commits into an internal implementation order, not permission to release isolated CRUD pages as a working dispatch system.
 
 **Why this order:** the existing seven-page foundation is already available. The next smallest useful increment must include real work, exclusive assignments, physical execution, recovery and measurable mileage. Deferring recovery would strand cargo; deferring mileage would leave the user-selected outcome unmeasurable. Optional maps, AI and optimization bring external dependencies without completing those essentials.
 
-**Implementation sequence (one release):** C01–C05 establish profiles/jobs → C06–C10 planning/reservations → C11–C16 execution/recovery/corrections → C17–C20 measurement → C21–C23 board/refresh → C24–C25 cross-flow verification/runbook. Each unit ships its own tests. UI/API delivery may be interleaved within that dependency order so actions are reviewable as implemented. Features remain unavailable to pilot operators until the complete release gate passes; do not expose half-working lifecycle actions.
+**Implementation sequence (one release):** C01–C02 establish profiles and C04–C05 jobs → C09 establishes source read/eligibility contracts → C03 integrates fleet eligibility UI → C06–C08/C10 planning/reservations → C11–C16 execution/recovery/corrections → C17–C20 measurement → C21–C23 board/refresh → C24–C25 cross-flow verification/runbook. Each unit ships its own tests. UI/API delivery may be interleaved within that dependency order so actions are reviewable as implemented. Features remain unavailable to pilot operators until the complete release gate passes; do not expose half-working lifecycle actions.
 
 **Business acceptance criteria:**
 
@@ -504,7 +518,7 @@ No platform-scoped commit is proposed, so no external tracker claim is needed fo
 
 **Rollback:** stop new dispatch writes and revert to the company's previous manual coordination process if necessary. Preserve operational data and provide authorized read access; explicitly finish/recover already-started trips or record their external manual outcomes before removing write capability. Never cancel trips, release cargo or drop new tables merely to roll back software. A deployment rollback involving migrations/production remains a separately authorized operation.
 
-**Total:** 25 proposed atomic commits for one complete release; zero additional implementation commits assumed for the subsequent baseline/pilot observation period. Future GPS/route optimization/driver portal/AI work requires a separate scoped extension based on observed manual bottlenecks.
+**Total:** 25 work packages / 33 proposed atomic commits for one complete release; zero additional implementation commits assumed for the subsequent baseline/pilot observation period. Future GPS/route optimization/driver portal/AI work requires a separate scoped extension based on observed manual bottlenecks.
 
 - [x] One complete operational release, dependencies, manual workarounds and measurable value identified.
 - [ ] Independent DDD domain criteria received and challenged by PM.
@@ -610,7 +624,7 @@ Additional mandatory traces from review: source with onboard A and unpicked B ca
 | Correction rewrites dependent history | High / corrupted custody/metrics | Typed successor, stream locks, reject contradictory repairs | Some mistaken histories need manual investigation before safe correction |
 | Post-commit event/response failure | Medium / duplicate operator action | Atomic receipt, current-authorized outcome lookup, authoritative refresh | UI may temporarily show unknown/stale outcome |
 | Scope or source-field leak | High / tenant/privacy exposure | Trusted scope, minimum projections, exact/wildcard tests | Requires end-to-end authorization tests for every proposed route |
-| Estimates too optimistic | Medium / incomplete release | 25 units are planning estimate; readiness audits may split C16/C18 | No delivery date promised; preserve complete workflow scope |
+| Estimates too optimistic | Medium / incomplete release | 25 work packages expand to 33 provisional atomic commits; feature readiness may refine further | No delivery date promised; preserve complete workflow scope |
 | Routing/legal assumptions | High / unusable physical plan | Dispatcher confirmation; clear manual estimates and explicit exclusions | Human remains responsible for real-world feasibility |
 
 ## Final Compliance Report / Handoff

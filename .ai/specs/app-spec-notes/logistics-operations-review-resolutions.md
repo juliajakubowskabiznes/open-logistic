@@ -30,3 +30,10 @@ Substantial domain changes require a fresh context re-review before the gate is 
 - F5 accepted: explicit populated-dashboard Create job and ready-job Plan trip actions, retained queue filters and execution-only first-reading repair on trip detail. Correction remains manager-only.
 
 These are author resolutions of specific counterexamples; independent final review still verifies them before all gates are marked passed.
+
+## Architect checkpoint 1 (09dd0bd3 / 04100da36)
+
+- A1 accepted: named authorized general master/rule APIs, complete pagination and absence handling; custom-subject rules take precedence over linked rule-set rules (never union); editor-only unsaved state is not a server contract. Explicit supported UTC recurrence grammar, full-day one-off restriction, malformed-blocker fail-closed policy and DST examples precede the existing merger.
+- A2 accepted: 25 work packages now expand into 33 provisional atomic commits, with C08/C09/C11/C14 split in two and C16/C18 in three; source adapter precedes dependent profile/confirmation integration. Workflow totals deduplicate shared C09/C17.
+- Parent independently reran four assertions against the actual planner merger: unavailability splitting, full-UTC-day expansion, malformed blocker omission and ignored BYDAY. All passed and substantiate the need for boundary validation, not an operational application test pass.
+- No unavoidable core/platform dependency found; preserve one app module and existing command/UI/event seams. Outer-transaction side effects are explicitly post-commit; no new queue framework for board refresh.
