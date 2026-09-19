@@ -80,8 +80,9 @@ or apply_pricing decision. Existing order amounts are not changed by this remova
 ## UI / Frontend Architecture Contract
 
 Server page entrypoints host local client islands for table, details and diagnostic feed. Keep
-legacy URLs reachable. Main logistics entries remain AI Inbox and AI Transports; root/ai-inbox
-redirect to /backend/inbox-ops. Transport rows link to /backend/logistics/transports/:id.
+legacy URLs reachable. The Logistics navigation entries are AI Inbox, AI Transports,
+Transport jobs, and Agent inbox; root/ai-inbox redirect to /backend/inbox-ops. Transport rows
+link to /backend/logistics/transports/:id.
 Details show client/carrier financial information, vehicle capacity, history, repeated loads and
 available offers with accept/reject controls. Use DataTable, semantic tokens, i18n in all five
 locales, guarded mutations, explicit loading/error/empty states and organization-change resets.
