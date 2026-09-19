@@ -4,6 +4,7 @@ export const metadata: ModuleInfo = {
   name: 'logistics',
   title: 'Logistics',
   version: '0.1.0',
-  description: 'Dispatcher navigation foundation.',
+  description: 'Dispatcher transport read model over sales orders.',
   license: 'MIT',
+  requires: ['sales', 'customers', 'entities', 'inbox_ops'],
 }

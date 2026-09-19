@@ -1,10 +1,10 @@
 export const metadata = {
   requireAuth: true,
   requireFeatures: ['logistics.view'],
-  pageTitle: 'Dispatcher dashboard',
-  pageTitleKey: 'logistics.dashboard.title',
-  pageGroup: 'Logistics',
+  pageTitle: 'AI Inbox / Offers',
+  pageTitleKey: 'logistics.nav.aiInbox',
+  pageGroup: 'Our company',
   pageGroupKey: 'logistics.nav.group',
   pageOrder: 10,
-  icon: 'layout-dashboard',
-}
+  icon: 'inbox',
+} as const

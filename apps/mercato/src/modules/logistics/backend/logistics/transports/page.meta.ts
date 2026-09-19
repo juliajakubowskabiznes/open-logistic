@@ -1,10 +1,10 @@
 export const metadata = {
   requireAuth: true,
   requireFeatures: ['logistics.view'],
-  pageTitle: 'Transport jobs',
-  pageTitleKey: 'logistics.transportJobs.title',
-  pageGroup: 'Logistics',
+  pageTitle: 'AI Transports',
+  pageTitleKey: 'logistics.nav.transports',
+  pageGroup: 'Our company',
   pageGroupKey: 'logistics.nav.group',
   pageOrder: 20,
-  icon: 'clipboard-list',
-}
+  icon: 'truck',
+} as const

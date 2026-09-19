@@ -1,8 +1,29 @@
 import type { ModuleSetupConfig } from '@open-mercato/shared/modules/setup'
+import { ensureRoles } from '@open-mercato/core/modules/auth/lib/setup-app'
+import { installCustomEntitiesFromModules } from '@open-mercato/core/modules/entities/lib/install-from-ce'
+import { LOGISTICS_ENTITY_IDS } from './ce'
+import { seedLogisticsExamples } from './lib/seed-examples'
+import { DISPATCHER_FEATURES, LOGISTICS_DISPATCHER_ROLE } from './lib/constants'
+
+export { DISPATCHER_FEATURES, LOGISTICS_DISPATCHER_ROLE } from './lib/constants'
 
 export const setup: ModuleSetupConfig = {
   defaultRoleFeatures: {
-    admin: ['logistics.view'],
+    admin: ['logistics.view', 'logistics.manage'],
+    dyspozytor: [...DISPATCHER_FEATURES],
+  },
+
+  async onTenantCreated({ em, tenantId }) {
+    await ensureRoles(em, { roleNames: [LOGISTICS_DISPATCHER_ROLE], tenantId })
+    await installCustomEntitiesFromModules(em, null, {
+      entityIds: [...LOGISTICS_ENTITY_IDS],
+      tenantIds: [tenantId],
+      includeGlobal: false,
+    })
+  },
+
+  async seedExamples({ em, container, tenantId, organizationId }) {
+    await seedLogisticsExamples(em, container, { tenantId, organizationId })
   },
 }
 
