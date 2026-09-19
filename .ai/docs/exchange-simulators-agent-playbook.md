@@ -39,4 +39,14 @@ Scenarios support batches, configurable parallelism/RPS/timeouts, periodic sched
 
 ## Routing demo
 
-[GraphHopper demo](../../tools/graphhopper-demo/README.md) is a standalone fixture/live routing demonstration. It uses a car profile, not truck constraints; it is not connected to business routing. Bash, Docker and a large OSM import are required for live Poland routing. The fixture works without GraphHopper, but the viewer still downloads Leaflet and OSM tiles.
+[GraphHopper demo](../../tools/graphhopper-demo/README.md) is a standalone fixture/live routing demonstration. It uses a car profile, not truck constraints; it is not connected to production business routing. Bash, Docker and a large OSM import are required for live Poland routing. The fixture works without GraphHopper, but the viewer still downloads Leaflet and OSM tiles.
+
+The logistics transport-jobs demo can create a Warszawa-to-Poznań order using the live router or the committed fallback fixture. It can also import the matching synthetic Trans order after the scenario posts it to the development inbox:
+
+```powershell
+$env:TARGET_BASE_URL = 'http://127.0.0.1:3000'
+$env:TRANS_INBOX_TOKEN = '<same random token configured on the server>'
+yarn trans:sim run tools/trans-api-simulator/scenarios/waw-poz-order.yaml
+```
+
+Open `/backend/logistics/transport-jobs`, or call `POST /api/logistics/orders` with `{ "action": "demo-waw-poz" }`. The demo order store is process-local and separate from the Sales-backed transport workflow.

@@ -186,5 +186,14 @@
   "logistics.fields.carrierRating": "Ocena przewoźnika (1–5)",
   "logistics.errors.carrierRatingInteger": "Ocena przewoźnika musi być liczbą całkowitą",
   "logistics.errors.carrierRatingMinimum": "Ocena przewoźnika musi wynosić co najmniej 1",
-  "logistics.errors.carrierRatingMaximum": "Ocena przewoźnika nie może przekraczać 5"
+  "logistics.errors.carrierRatingMaximum": "Ocena przewoźnika nie może przekraczać 5",
+  "logistics.orders.createWawPoz": "Utwórz WAW → POZ + trasa",
+  "logistics.orders.importInbox": "Importuj z inboxa",
+  "logistics.orders.refresh": "Odśwież",
+  "logistics.orders.count": "{count} zleceń",
+  "logistics.orders.hint": "Demo (pamięć procesu). Trasa z GraphHopper :8989 albo fixture WAW→POZ. Utworzenie też wrzuca zamówienie do inboxa Trans.",
+  "logistics.orders.loading": "Ładowanie zleceń…",
+  "logistics.orders.empty": "Brak zleceń transportowych.",
+  "logistics.orders.error": "Nie udało się wczytać/utworzyć zlecenia",
+  "logistics.orders.instructions": "Nawigacja ({count})"
 }

@@ -1,0 +1,25 @@
+name: waw-poz-order
+description: Single Trans order Warszawa → Poznań into OM inbox (for logistics + GraphHopper)
+target:
+  baseUrl: ${TARGET_BASE_URL:-http://127.0.0.1:3001}
+  headers:
+    Authorization: Basic ${TRANS_SIM_BASIC:-dGVzdDp0ZXN0}
+    Content-Type: application/json
+    Accept: application/json
+    X-Trans-Sim: "1"
+    X-Om-Tenant-Id: ${TRANS_INBOX_TENANT_ID:-}
+  pathMap:
+    "POST /ext/orders-api/v1/orders": /api/integrations/trans/webhooks/order
+defaults:
+  concurrency: 1
+  timeoutMs: 15000
+batches:
+  - id: waw-poz
+    count: 1
+    template: order.event.created
+    vars:
+      pickupCity: Warszawa
+      deliveryCity: Poznań
+      currency: eur
+      notes: Zlecenie demo WAW→POZ (GraphHopper route w module logistics)
+reportPath: tools/trans-api-simulator/.reports/waw-poz-order.ndjson

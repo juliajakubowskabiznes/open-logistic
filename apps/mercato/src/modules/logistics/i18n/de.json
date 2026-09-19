@@ -186,5 +186,14 @@
   "logistics.fields.carrierRating": "Bewertung des Frachtführers (1–5)",
   "logistics.errors.carrierRatingInteger": "Die Bewertung muss eine ganze Zahl sein",
   "logistics.errors.carrierRatingMinimum": "Die Bewertung muss mindestens 1 sein",
-  "logistics.errors.carrierRatingMaximum": "Die Bewertung darf höchstens 5 sein"
+  "logistics.errors.carrierRatingMaximum": "Die Bewertung darf höchstens 5 sein",
+  "logistics.orders.createWawPoz": "WAW → POZ + Route erstellen",
+  "logistics.orders.importInbox": "Aus Inbox importieren",
+  "logistics.orders.refresh": "Aktualisieren",
+  "logistics.orders.count": "{count} Aufträge",
+  "logistics.orders.hint": "Demo (In-Memory). Route von GraphHopper :8989 oder WAW→POZ-Fixture. Erstellung postet auch in die Trans-Inbox.",
+  "logistics.orders.loading": "Aufträge werden geladen…",
+  "logistics.orders.empty": "Noch keine Transportaufträge.",
+  "logistics.orders.error": "Auftrag konnte nicht geladen/erstellt werden",
+  "logistics.orders.instructions": "Abbiegehinweise ({count})"
 }

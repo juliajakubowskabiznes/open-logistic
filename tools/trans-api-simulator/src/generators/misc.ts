@@ -1,18 +1,61 @@
-import { externalId, floatBetween, GenCtx, intBetween, pick, rng } from './common'
+import { externalId, floatBetween, GenCtx, intBetween, pick, rng, CITIES } from './common'
 
+const WAW = CITIES.find((c) => c.name === 'Warszawa')!
+const POZ = CITIES.find((c) => c.name === 'Poznań')!
+
+function stopFromCity(
+  city: (typeof CITIES)[number],
+  role: 'pickup' | 'delivery',
+  rand: () => number,
+) {
+  return {
+    role,
+    name: city.name,
+    country: 'PL',
+    locality: city.name,
+    postal_code: city.postal,
+    street: pick(rand, ['Industrialna', 'Logistyczna', 'Spedycyjna', 'Magazynowa']),
+    number: String(intBetween(rand, 1, 120)),
+    coordinates: {
+      latitude: city.lat,
+      longitude: city.lon,
+    },
+  }
+}
+
+/** Transport-shaped order with two PL stops (default Warszawa → Poznań). */
 export function orderCreate(ctx: GenCtx) {
   const rand = rng(ctx)
   const price = floatBetween(rand, 600, 2500, 2)
+  const pickupName = String(ctx.vars?.pickupCity ?? 'Warszawa')
+  const deliveryName = String(ctx.vars?.deliveryCity ?? 'Poznań')
+  const pickup =
+    CITIES.find((c) => c.name === pickupName) ??
+    (pickupName.toLowerCase().includes('war') ? WAW : WAW)
+  const delivery =
+    CITIES.find((c) => c.name === deliveryName) ??
+    (deliveryName.toLowerCase().includes('poz') ? POZ : POZ)
+
   return {
     external_id: externalId(ctx, 'ORD'),
-    reference_number: `ORD/${new Date().getFullYear()}/${String(ctx.index).padStart(6, '0')}`,
+    reference_number: `ORD/${new Date().getFullYear()}/${String(ctx.index + 1).padStart(6, '0')}`,
     freight_id: Number(ctx.vars?.freightId ?? intBetween(rand, 1_000_000, 9_999_999)),
     status: pick(rand, ['new', 'accepted', 'in_progress']),
     price: { currency: String(ctx.vars?.currency ?? 'eur'), value: price },
     carrier_company_id: Number(ctx.vars?.carrierCompanyId ?? 1028504),
     shipper_company_id: Number(ctx.vars?.shipperCompanyId ?? 1002003),
     created_at: new Date().toISOString(),
-    notes: `mock order from trans-api-simulator batch=${ctx.batchId}`,
+    notes: String(
+      ctx.vars?.notes ??
+        `Zlecenie ${pickup.name} → ${delivery.name} (trans-api-simulator)`,
+    ),
+    /** Two Poland stops — consumed by logistics transport-jobs / GraphHopper */
+    stops: [stopFromCity(pickup, 'pickup', rand), stopFromCity(delivery, 'delivery', rand)],
+    route_hint: {
+      from: { name: pickup.name, lat: pickup.lat, lng: pickup.lon },
+      to: { name: delivery.name, lat: delivery.lat, lng: delivery.lon },
+      profile: 'car',
+    },
   }
 }
 

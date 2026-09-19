@@ -186,5 +186,14 @@
   "logistics.fields.carrierRating": "운송사 평점 (1–5)",
   "logistics.errors.carrierRatingInteger": "운송사 평점은 정수여야 합니다",
   "logistics.errors.carrierRatingMinimum": "운송사 평점은 1 이상이어야 합니다",
-  "logistics.errors.carrierRatingMaximum": "운송사 평점은 5 이하여야 합니다"
+  "logistics.errors.carrierRatingMaximum": "운송사 평점은 5 이하여야 합니다",
+  "logistics.orders.createWawPoz": "WAW → POZ + 경로 생성",
+  "logistics.orders.importInbox": "수신함에서 가져오기",
+  "logistics.orders.refresh": "새로고침",
+  "logistics.orders.count": "{count}건",
+  "logistics.orders.hint": "데모(메모리). GraphHopper :8989 또는 WAW→POZ fixture. 생성 시 Trans 수신함에도 게시.",
+  "logistics.orders.loading": "주문 로딩…",
+  "logistics.orders.empty": "운송 주문이 없습니다.",
+  "logistics.orders.error": "주문 로드/생성 실패",
+  "logistics.orders.instructions": "턴바이턴 ({count})"
 }

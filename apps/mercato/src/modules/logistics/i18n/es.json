@@ -186,5 +186,14 @@
   "logistics.fields.carrierRating": "Valoración del transportista (1–5)",
   "logistics.errors.carrierRatingInteger": "La valoración debe ser un número entero",
   "logistics.errors.carrierRatingMinimum": "La valoración debe ser al menos 1",
-  "logistics.errors.carrierRatingMaximum": "La valoración no puede superar 5"
+  "logistics.errors.carrierRatingMaximum": "La valoración no puede superar 5",
+  "logistics.orders.createWawPoz": "Crear WAW → POZ + ruta",
+  "logistics.orders.importInbox": "Importar del inbox",
+  "logistics.orders.refresh": "Actualizar",
+  "logistics.orders.count": "{count} pedidos",
+  "logistics.orders.hint": "Demo (en memoria). Ruta desde GraphHopper :8989 o fixture WAW→POZ. Crear también publica en el inbox Trans.",
+  "logistics.orders.loading": "Cargando pedidos…",
+  "logistics.orders.empty": "Aún no hay pedidos de transporte.",
+  "logistics.orders.error": "No se pudo cargar/crear el pedido",
+  "logistics.orders.instructions": "Indicaciones ({count})"
 }

@@ -186,5 +186,14 @@
   "logistics.fields.carrierRating": "Carrier rating (1–5)",
   "logistics.errors.carrierRatingInteger": "Carrier rating must be an integer",
   "logistics.errors.carrierRatingMinimum": "Carrier rating must be at least 1",
-  "logistics.errors.carrierRatingMaximum": "Carrier rating must be at most 5"
+  "logistics.errors.carrierRatingMaximum": "Carrier rating must be at most 5",
+  "logistics.orders.createWawPoz": "Create WAW → POZ + route",
+  "logistics.orders.importInbox": "Import from inbox",
+  "logistics.orders.refresh": "Refresh",
+  "logistics.orders.count": "{count} orders",
+  "logistics.orders.hint": "Demo store (in-memory). Route from live GraphHopper :8989 or committed WAW→POZ fixture. Creating also posts the order into Trans inbox.",
+  "logistics.orders.loading": "Loading orders…",
+  "logistics.orders.empty": "No transport orders yet.",
+  "logistics.orders.error": "Failed to load or create order",
+  "logistics.orders.instructions": "Turn-by-turn ({count})"
 }

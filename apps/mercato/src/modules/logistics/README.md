@@ -30,9 +30,11 @@ settlement documents.
 The two visible navigation entries use `/backend/logistics/ai-inbox` and
 `/backend/logistics/transports`; the root URL remains a hidden redirect alias.
 
-Legacy URLs `transport-jobs`, `fleet`, `trips`, `map`, `statistics` and
-`proposals-disruptions` remain accessible under `/backend/logistics` and continue to
-show planned capabilities. They are hidden from navigation.
+Legacy URLs `fleet`, `trips`, `map`, `statistics` and `proposals-disruptions` remain
+accessible under `/backend/logistics` and continue to show planned capabilities. They
+are hidden from navigation. `/backend/logistics/transport-jobs` hosts a separate
+process-local GraphHopper and Trans inbox demonstration; it is also hidden from
+navigation and does not create Sales-backed transports.
 
 ## Enable and configure
 
@@ -96,6 +98,20 @@ Trans.eu, TIMOCOM and Eurodebt simulator traffic. It does not turn webhook bodie
 business orders. See [the simulator playbook](../../../../../.ai/docs/exchange-simulators-agent-playbook.md)
 and `tools/` for commands. GraphHopper is an independent car-routing demonstration,
 not a production truck-routing integration.
+
+The transport-jobs demo uses the live GraphHopper service on port 8989 when available
+and falls back to the committed Warszawa-to-Poznań route fixture. Creating a demo
+order also posts it to the development Trans inbox. The matching simulator scenario
+can be sent with:
+
+```sh
+TARGET_BASE_URL=http://127.0.0.1:3000 \
+TRANS_INBOX_TOKEN=<same-random-token-as-the-server> \
+yarn trans:sim run tools/trans-api-simulator/scenarios/waw-poz-order.yaml
+```
+
+The demo API is `GET|POST|DELETE /api/logistics/orders` and requires
+`logistics.view`.
 
 ## Verification
 
