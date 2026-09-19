@@ -136,7 +136,17 @@ export const enabledModules: ModuleEntry[] = [
   { id: 'configs', from: '@open-mercato/core' },
   { id: 'query_index', from: '@open-mercato/core' },
   { id: 'audit_logs', from: '@open-mercato/core' },
-  { id: 'attachments', from: '@open-mercato/core' },
+  {
+    id: 'attachments',
+    from: '@open-mercato/core',
+    overrides: {
+      routes: {
+        pages: {
+          '/backend/storage/attachments': { metadata: { navHidden: true } },
+        },
+      },
+    },
+  },
   { id: 'dictionaries', from: '@open-mercato/core' },
   { id: 'api_keys', from: '@open-mercato/core' },
   { id: 'seeds', from: '@open-mercato/core' },
@@ -159,8 +169,43 @@ export const enabledModules: ModuleEntry[] = [
 // Full catalog extras — skipped when OM_SLIM_DEV_MODULES=true.
 if (!parseBooleanWithDefault(process.env.OM_SLIM_DEV_MODULES, false)) {
   enabledModules.push(
-    { id: 'warranty_claims', from: '@open-mercato/core' },
-    { id: 'wms', from: '@open-mercato/core' },
+    {
+      id: 'warranty_claims',
+      from: '@open-mercato/core',
+      overrides: {
+        routes: {
+          pages: {
+            '/backend/warranty_claims': { metadata: { navHidden: true } },
+            '/backend/warranty_claims/create': { metadata: { navHidden: true } },
+            '/backend/warranty_claims/registrations': { metadata: { navHidden: true } },
+            '/backend/warranty_claims/registrations/create': { metadata: { navHidden: true } },
+            '/backend/warranty_claims/settings': { metadata: { navHidden: true } },
+            '/backend/warranty_claims/troubleshooting-guides': { metadata: { navHidden: true } },
+            '/backend/warranty_claims/troubleshooting-guides/create': { metadata: { navHidden: true } },
+            '/backend/warranty_claims/vendor-policies': { metadata: { navHidden: true } },
+            '/backend/warranty_claims/vendor-policies/create': { metadata: { navHidden: true } },
+          },
+        },
+      },
+    },
+    {
+      id: 'wms',
+      from: '@open-mercato/core',
+      overrides: {
+        routes: {
+          pages: {
+            '/backend/wms': { metadata: { navHidden: true } },
+            '/backend/wms/inventory': { metadata: { navHidden: true } },
+            '/backend/wms/locations': { metadata: { navHidden: true } },
+            '/backend/wms/lots': { metadata: { navHidden: true } },
+            '/backend/wms/movements': { metadata: { navHidden: true } },
+            '/backend/wms/reservations': { metadata: { navHidden: true } },
+            '/backend/wms/warehouses': { metadata: { navHidden: true } },
+            '/backend/wms/zones': { metadata: { navHidden: true } },
+          },
+        },
+      },
+    },
     { id: 'devices', from: '@open-mercato/core' },
     // Live DS component gallery at /backend/design-system (feature-gated by
     // design_system.view). Disable by removing this line.
@@ -170,7 +215,23 @@ if (!parseBooleanWithDefault(process.env.OM_SLIM_DEV_MODULES, false)) {
     { id: 'search', from: '@open-mercato/search' },
     { id: 'planner', from: '@open-mercato/core' },
     { id: 'resources', from: '@open-mercato/core' },
-    { id: 'staff', from: '@open-mercato/core' },
+    {
+      id: 'staff',
+      from: '@open-mercato/core',
+      overrides: {
+        routes: {
+          pages: {
+            '/backend/staff/time-tracking': { metadata: { navHidden: true } },
+            '/backend/staff/time-tracking/board': { metadata: { navHidden: true } },
+            '/backend/staff/time-tracking/entries': { metadata: { navHidden: true } },
+            '/backend/staff/time-tracking/projects': { metadata: { navHidden: true } },
+            '/backend/staff/time-tracking/reports': { metadata: { navHidden: true } },
+            '/backend/staff/time-tracking/settings': { metadata: { navHidden: true } },
+            '/backend/staff/time-tracking/timesheet': { metadata: { navHidden: true } },
+          },
+        },
+      },
+    },
     { id: 'data_sync', from: '@open-mercato/core' },
     { id: 'sync_excel', from: '@open-mercato/core' },
     { id: 'messages', from: '@open-mercato/core' },
@@ -181,11 +242,33 @@ if (!parseBooleanWithDefault(process.env.OM_SLIM_DEV_MODULES, false)) {
     // Push notification rails — `push` delivery strategy + delivery log + send-push worker.
     // Fans out to `devices` tokens and sends through the `communication_channels` hub.
     { id: 'push_notifications', from: '@open-mercato/core' },
-    { id: 'phone_calls', from: '@open-mercato/core' },
+    {
+      id: 'phone_calls',
+      from: '@open-mercato/core',
+      overrides: {
+        routes: {
+          pages: {
+            '/backend/phone_calls': { metadata: { navHidden: true } },
+          },
+        },
+      },
+    },
     // agent_orchestrator moved to the enterprise catalog — enabled below behind
     // OM_ENABLE_ENTERPRISE_MODULES + OM_ENABLE_ENTERPRISE_MODULES_AGENTS.
     { id: 'payment_gateways', from: '@open-mercato/core' },
-    { id: 'checkout', from: '@open-mercato/checkout' },
+    {
+      id: 'checkout',
+      from: '@open-mercato/checkout',
+      overrides: {
+        routes: {
+          pages: {
+            '/backend/checkout/pay-links': { metadata: { navHidden: true } },
+            '/backend/checkout/templates': { metadata: { navHidden: true } },
+            '/backend/checkout/transactions': { metadata: { navHidden: true } },
+          },
+        },
+      },
+    },
     { id: 'documents', from: '@open-mercato/documents' },
     { id: 'gateway_stripe', from: '@open-mercato/gateway-stripe' },
     // Per-user email channels for the Communications Hub (SPEC-045d / email
@@ -208,7 +291,22 @@ if (!parseBooleanWithDefault(process.env.OM_SLIM_DEV_MODULES, false)) {
     { id: 'sync_akeneo', from: '@open-mercato/sync-akeneo' },
     { id: 'tillio', from: '@open-mercato/tillio' },
     { id: 'shipping_carriers', from: '@open-mercato/core' },
-    { id: 'eudr', from: '@open-mercato/core' },
+    {
+      id: 'eudr',
+      from: '@open-mercato/core',
+      overrides: {
+        routes: {
+          pages: {
+            '/backend/eudr': { metadata: { navHidden: true } },
+            '/backend/eudr/evidence-submissions': { metadata: { navHidden: true } },
+            '/backend/eudr/plots': { metadata: { navHidden: true } },
+            '/backend/eudr/product-mappings': { metadata: { navHidden: true } },
+            '/backend/eudr/risk-assessments': { metadata: { navHidden: true } },
+            '/backend/eudr/statements': { metadata: { navHidden: true } },
+          },
+        },
+      },
+    },
     { id: 'customer_accounts', from: '@open-mercato/core' },
     { id: 'portal', from: '@open-mercato/core' },
     {
@@ -224,6 +322,18 @@ if (!parseBooleanWithDefault(process.env.OM_SLIM_DEV_MODULES, false)) {
           ? { groupOrder: ['example.nav.group'] }
           : undefined,
         routes: {
+          pages: {
+            '/backend/example': { metadata: { navHidden: true } },
+            '/backend/mutation-lifecycle': { metadata: { navHidden: true } },
+            '/backend/payments': { metadata: { navHidden: true } },
+            '/backend/todos': { metadata: { navHidden: true } },
+            '/backend/todos/create': { metadata: { navHidden: true } },
+            '/backend/umes-extensions': { metadata: { navHidden: true } },
+            '/backend/umes-handlers': { metadata: { navHidden: true } },
+            '/backend/umes-integrations': { metadata: { navHidden: true } },
+            '/backend/umes-next-phases': { metadata: { navHidden: true } },
+            '/backend/umes-query-extensions': { metadata: { navHidden: true } },
+          },
           api: {
             'GET /api/example/override-probe': {
               handler: async () => Response.json({
