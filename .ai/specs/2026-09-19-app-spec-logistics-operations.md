@@ -120,6 +120,10 @@ No started-trip cancellation. An uncollected job can be cancelled or released du
 
 The receiving recovery plan is a **draft** with proposed resources until the handover command confirms and starts it; it cannot pass the ordinary ready-job confirmation path for cargo already in transit. This special command validates the proposed future reservation and all competing bookings. When the same driver is reused, it ends that driver's source reservation and occupancy at the handover boundary before starting the target interval, in the same transaction. Each resource's explicit release caps that resource's effective reservation, independently of the other. Source obligations and custody must permit release; source continuation requires a driver still assigned and occupied. A draft recovery plan never owns cargo or secretly blocks a resource. Disallow same-vehicle recovery in this release; use resume/retry on the original trip instead.
 
+**Interruption predicate:** both completed and interrupted outcomes require no remaining active unperformed obligation and no custody on the source trip. Before interruption, every unpicked assigned job must be released to ready or cancelled with its normal features/versions, closing membership and skipping remaining stops. Reject interruption until that is done, or include explicit selected dispositions atomically; any failure leaves both trip and jobs unchanged. A transferred job's historical membership does not block source interruption. Counterexample fixed: source carries A and has not collected B; transfer A, then interruption must still reject until B is explicitly released/cancelled. This applies equally to a source with only unpicked jobs.
+
+Historical failed/completed/skipped attempts retain the plan/promise revision used at the time. Only pending effective obligations are validated against new effective promises; yesterday's failed attempt neither blocks tomorrow's retry nor moves to tomorrow. Handover-in acquires custody; handover-out releases it; both are mileage boundaries or explicit missing readings. Delivery requires effective custody from pickup **or handover-in**, not a fabricated second pickup. Load simulation and mileage derivation include handover transitions.
+
 #### Assignment and load invariants
 
 1. Every referenced record belongs to the same tenant and organization. Failed authorization or missing scope produces no data or mutation. Read permission never implies dispatch permission.
@@ -189,7 +193,9 @@ Five workflows together form one usable operational release. Metrics below are p
 
 **Journey:** manager links vehicle/driver profiles to existing masters and sets planner availability → dispatcher selects a customer, records a complete job and accepts it → the ready queue exposes work and suitable fleet resources for planning.
 
-**Starts:** new resource onboarding or customer transport request. **Ends:** required resources are eligible and accepted job is visible in the scoped ready queue. **Not:** reservation, sales invoicing or a driver account. **Personas:** manager and dispatcher. **ROI:** target ≥95% of accepted jobs contain weight, places and windows without a follow-up data request; numerator jobs accepted without a subsequent required-data correction / all accepted jobs during the pilot, measured from revisions. This enables load matching; no claim of empty-km savings from intake alone.
+**Starts/ends:** two independent subflows below. **Not:** reservation, sales invoicing or a driver account. **Personas:** manager and dispatcher. **Value:** usable cargo/location/window inputs enable manual load matching; accepted-job count and validation completeness are operational inputs to the primary E/T metric, not a separately claimed reduction in staff effort.
+
+WF1 is a release group with independent subflows: **WF1a** starts at resource onboarding and ends at a saved dispatch profile with a truthful eligibility explanation for the selected interval; **WF1b** starts at customer request and ends at ready-job acceptance, regardless of current fleet availability. Intake is never gated on onboarding a new resource or having a free truck. Ordinary amendments cannot prove missing-data follow-up, so no numerical intake-ROI claim is made without classified intake-correction evidence.
 
 **Edges:** (1) customer/master removed or inaccessible → explain selection failure, retain unsaved form, no accepted job; (2) palletized count unknown → retain draft input, block acceptance; (3) duplicate customer reference → warn with permitted matches, allow a distinct job only after explicit acknowledgement since references are not globally unique; (4) no covering availability → resource remains listed as unavailable/unknown, never silently free; (5) stale form → standard conflict bar, no partial overwrite.
 
@@ -225,7 +231,7 @@ Five workflows together form one usable operational release. Metrics below are p
 
 **Starts:** confirmed plan and physical departure report. **Ends:** all active obligations settled, no cargo aboard, actual end recorded and resource releases recorded; incomplete mileage may remain visibly open under WF5. **Not:** inferred GPS events, customer notification or proof-of-delivery document issuance. **ROI:** target 100% of completed trip obligations have a recorded terminal custody outcome; 95% of reports entered within 30 minutes of their occurredAt timestamp, measured per effective fact. This makes loaded versus empty legs defensible; reporting latency is shown rather than hidden.
 
-**Edges:** (1) prior trip overruns → block new start on occupied vehicle/driver and flag affected plan; (2) actual pickup/delivery late → accept truthful fact and show lateness against both original/effective promises; (3) duplicate click/timeout → retry original requestId or retrieve committed outcome, no duplicate pickup; (4) missing reading → record physical event with missing state, do not free cargo or fabricate kilometres; (5) one uncollected job released → skip its future stops and permit finish when remaining active obligations/custody permit.
+**Edges:** (1) prior trip overruns → block new start on occupied vehicle/driver and flag affected plan; (2) actual pickup/delivery late → accept truthful fact and show lateness against both original/effective promises; (3) duplicate click/timeout → retry original requestId or retrieve committed outcome, no duplicate pickup; (4) missing reading → valid pickup/delivery/return still applies its normal custody transition, while affected mileage remains incomplete; the absence of a reading alone implies no cargo change and no invented kilometres; (5) one uncollected job released → skip its future stops and permit finish when remaining active obligations/custody permit.
 
 | Step | Existing capability | Gap / boundary | Commit IDs |
 |---|---|---|---|
@@ -241,6 +247,8 @@ Five workflows together form one usable operational release. Metrics below are p
 **Journey:** dispatcher records a failed attempt/delay → agrees a retry/return or manager prepares own-fleet recovery → validates changed promises/resources → records a retry, return or atomic handover → completes/interrupts affected trips truthfully. Separately, a manager corrects a mistaken report using the constrained fact-correction action; correction is not recovery movement.
 
 **Starts:** actual failure, breakdown or discovery of an erroneous report. **Ends:** recovery obligation has a confirmed executable next step and then a delivered/returned outcome, or mistaken data is corrected without contradicting later history; source trip is ended/released when physically appropriate. **Not:** subcontracting, split cargo, rewriting historical vehicle identity, customer refunds or arbitrary force repair. **ROI:** 100% of interrupted trips have zero unaccounted cargo and explicit resource release states; unresolved onboard jobs remain in an exception queue until resolved. Report median disruption-open-to-resolution duration and its unresolved count, with no promised duration absent a baseline.
+
+Independent subflow boundaries: **WF4a physical recovery** starts at a disruption report and ends at an executable retry/return plan or completed custody handover with source obligations disposed; subsequent pickup/delivery/return execution belongs to WF3. **WF4b correction** starts at discovery of a mistaken report and ends in an audited consistent replacement/void or explicit rejection with unchanged facts and linked investigation details. Correction does not require an open disruption or fabricate movement. Report accepted/rejected correction counts from command outcomes and correction records separately; neither is claimed as reduced empty kilometres. No generic investigation entity is added: conflict details link the records requiring review.
 
 **Edges:** (1) new receiving vehicle fails capacity/booking check for one transferred job → rollback entire handover set; (2) delivery retry moves to next day → append agreed promise and linked attempt, retain original lateness; (3) source driver reused → atomic boundary release/reacquire, no duplicate occupancy; (4) concurrent handover/correction/delivery → one serialized effective custody history, loser receives conflict; (5) proposed correction contradicts later trip → reject with linked conflict, preserve current truth and request factual investigation; no force option.
 
@@ -292,7 +300,11 @@ Keep the seven existing Logistics sidebar destinations and the app's global land
 | Measurement `/backend/logistics/statistics/measurement` | Manager | Cohort/timezone/pilot dates form, freeze action and explicit immutable-period explanation |
 | Map `/backend/logistics/map` | Existing logistics readers | Existing honest planned state; no fake markers or live-location label |
 
-**Dashboard definitions:** ready-job count = active `ready` jobs in selected organization (all dates by default, pickup window date filter optional); today's trips = non-cancelled trips whose planned interval intersects the selected day in reporting timezone, plus every in_progress trip regardless of start day; active count = all in_progress trips; overdue stops = pending/failed effective obligations whose effective latest promised time is before server now, excluding released/skipped obligations; open disruptions = unresolved records. Counts are server aggregates across all matching rows, not the visible page of ≤100. Every card clicks through with the identical scope/filter. Available vehicles are shown only for an explicit selected planning interval with observed availability and no conflicting logistics reservation/occupancy; no ambiguous all-day “available now” count.
+**Dashboard definitions:** ready-job count = active `ready` jobs in selected organization (all dates by default, pickup window date filter optional); today's trips = non-cancelled trips whose planned interval intersects the selected day in reporting timezone, plus every in_progress trip regardless of start day; active count = all in_progress trips; overdue pickups/deliveries follow the effective-obligation definition below; open disruptions = unresolved records. Counts are server aggregates across all matching rows, not the visible page of ≤100. Every card clicks through with the identical scope/filter. Available vehicles are shown only for an explicit selected planning interval with observed availability and no conflicting logistics reservation/occupancy; no ambiguous all-day “available now” count.
+
+**Overdue-card precision:** label it “Overdue pickups/deliveries.” Count at most one unsettled obligation per active job and action (pickup or delivery), using its current effective attempt and latest effective promise end. A failed attempt remains current until a replacement is explicitly linked; once retry/return/release supersedes it, exclude it. Settled, released, skipped and superseded history never counts. A return disposition retires the delivery obligation; return/handover/end lateness uses plannedDeparture on the separate trip exception list, not customer delivery promises. After a successful retry, neither attempt remains overdue. Store `supersedesStopId: UUID O` for a replacement return and use retryOfStopId for a retry; one current attempt per obligation is enforced by the trip command.
+
+**Entry actions:** the dashboard always offers Create job to jobs.manage users, even with a populated queue. Ready-job row/detail offers Plan trip to dispatch.manage users, prefills the selected job and rechecks readiness at confirmation. Keep queue filters/date in return navigation. A missing-reading prompt links an execution-only dispatcher back to the authorized trip stop's Append reading action (a first reading, not alteration of an existing reading); an existing reading correction or non-trip/day gap links to a manager repair surface with a clear escalation explanation. No unauthorized Mileage write link is presented as a usable action. DataTable uses its built-in filter bar; do not mount a duplicate. Domain trip states live in schedule item metadata rather than changing the shared ScheduleItem status contract.
 
 **Manual empty-running decisions:** ready jobs show pickup/delivery places and windows; trip rows show final planned place/time and last confirmed location/observation age. Dispatcher can filter places and dates to identify candidate return loads and combine jobs. There is no distance-ranked recommendation or claimed optimization. Planning includes a leg table with optional `estimatedDistanceKm: decimal ≥0` per consecutive planned stop boundary, `estimateSource: text` and estimated empty/loaded classification derived from the planned load sequence. Estimates live in PlanSnapshot and never enter the actual mileage KPI. Missing estimates remain blank; manually comparing alternatives is optional and cannot block dispatch.
 
@@ -461,11 +473,56 @@ No platform-scoped commit is proposed, so no external tracker claim is needed fo
 
 ## 7. Phasing & Rollout `PM`
 
-Pending Phase 4 and independently authored domain criteria.
+### Release 1 — Manual dispatch with truthful empty-distance measurement
+
+**Goal:** a dispatcher runs customer request → confirmed multi-job plan → execution → delivery/return/recovery, while a manager can reconcile all fleet movement and evaluate a fixed-cohort empty-km comparison. All sixteen stories and five workflow groups ship together. The 25 C-items are an internal implementation order, not permission to release isolated CRUD pages as a working dispatch system.
+
+**Why this order:** the existing seven-page foundation is already available. The next smallest useful increment must include real work, exclusive assignments, physical execution, recovery and measurable mileage. Deferring recovery would strand cargo; deferring mileage would leave the user-selected outcome unmeasurable. Optional maps, AI and optimization bring external dependencies without completing those essentials.
+
+**Implementation sequence (one release):** C01–C05 establish profiles/jobs → C06–C10 planning/reservations → C11–C16 execution/recovery/corrections → C17–C20 measurement → C21–C23 board/refresh → C24–C25 cross-flow verification/runbook. Each unit ships its own tests. UI/API delivery may be interleaved within that dependency order so actions are reviewable as implemented. Features remain unavailable to pilot operators until the complete release gate passes; do not expose half-working lifecycle actions.
+
+**Business acceptance criteria:**
+
+- [ ] An authorized dispatcher creates a real job, combines it with compatible work, confirms an exclusive vehicle/driver assignment, records departure/pickup/delivery/end and sees the same state after refresh.
+- [ ] Competing dispatchers cannot confirm overlapping resources or duplicate job custody; a losing write has a clear recovery path and no partial state.
+- [ ] A failed delivery has a usable retry/return path; a broken vehicle can hand whole jobs to another own-fleet trip while preserving mileage/custody/history and disposing of all source obligations.
+- [ ] Missing mileage never forces a fake reading or false physical status. Positioning/workshop/no-job days and unknown distance remain visible in the denominator/coverage.
+- [ ] A complete fixture cohort yields the exact E/T and relative change; incomplete/zero-distance cohorts display N/A/incomplete and actionable missing data. An actual 10% business improvement is a pilot outcome, not a test-suite success criterion.
+- [ ] Read-only, dispatcher and manager permissions work through UI and direct APIs; tenant/organization scope and concurrent versions are enforced.
+- [ ] Operators reach their primary action within three navigational clicks; keyboard/mobile, five locales, unchanged existing navigation and honest planned map/proposals states are verified.
+
+**Domain criteria:** pending independently authored criteria and PM challenge; no self-authored criteria are labelled as reviewer output.
+
+### Rollout and pilot (no additional software phase)
+
+1. Complete App Spec review and obtain user confirmation; then decompose into independently deployable capabilities with om-spec-writing. Domain rules stay here; capability grouping must not expose an unusable production workflow.
+2. Implement on the task branch with generated migration files/snapshots, discovered registries and required template parity. Verify the complete test/build gate and actual UI. Do not apply local/production migrations as a side effect of spec approval.
+3. In an authorized staging deployment, apply the reviewed migrations; run standard generation/role ACL sync/structural cache refresh; grant only the agreed operational/source-read features. Use isolated fixtures for smoke testing. No seeded demo data in live measurement.
+4. Manager prepares real profiles/availability, selects immutable reporting timezone and freezes an explicit cohort before baseline collection. Choose a small pilot fleet with feasible daily odometer evidence collection; include night work if it is normal operations. If the team cannot collect complete boundaries, acknowledge that the manual pilot cannot yet measure the goal and adjust the next product proposal rather than faking coverage.
+5. Collect four complete baseline weeks using the same app and measurement rules; operators use their usual planning method. Begin the eight-week planning pilot using the shared ready queue/known end locations to combine work. The start dates and proposed 10% target are explicit final-confirmation choices, not assumed historical results.
+6. Review coverage and unresolved disruptions daily; evaluate the complete fixed-cohort E/T comparison after the pilot. Show actual dates, job counts, fleet membership, record revisions and late corrections; distinguish correlation from demonstrated causation.
+
+**Rollback:** stop new dispatch writes and revert to the company's previous manual coordination process if necessary. Preserve operational data and provide authorized read access; explicitly finish/recover already-started trips or record their external manual outcomes before removing write capability. Never cancel trips, release cargo or drop new tables merely to roll back software. A deployment rollback involving migrations/production remains a separately authorized operation.
+
+**Total:** 25 proposed atomic commits for one complete release; zero additional implementation commits assumed for the subsequent baseline/pilot observation period. Future GPS/route optimization/driver portal/AI work requires a separate scoped extension based on observed manual bottlenecks.
+
+- [x] One complete operational release, dependencies, manual workarounds and measurable value identified.
+- [ ] Independent DDD domain criteria received and challenged by PM.
+- [ ] Final rollout challenger passed.
 
 ## 8. Cross-Spec Conflicts `PM`
 
-The navigation foundation's exclusions were stage-specific; this explicit user-requested extension adds operations. Its proposed empty-km target remains a hypothesis. Stock availability is not vehicle/personnel availability. Existing optimistic-locking and optional-staff contracts apply without replacement. Full reconciliation pending platform mapping.
+| Related source | Potential conflict | Resolution |
+|---|---|---|
+| [Foundation App Spec](2026-09-19-app-spec-logistics-dashboard.md) | Historical scope excludes every operation and describes static pages | Its exclusions apply to foundation only; this user-requested extension owns operational rules and retains all seven URLs/read semantics |
+| Foundation goal A3 | 10% relative reduction proposed before real data | Retained only as proposal; user confirmed empty kilometres as goal, not target magnitude or evidence |
+| [Stock availability contract](2026-08-14-availability-contract.md) | Similar name could suggest vehicle booking reuse | Stock/catalog contract is unrelated; planner supplies declared schedule, logistics owns transport reservation |
+| [OSS optimistic locking](implemented/2026-05-25-oss-optimistic-locking.md), [coverage completion](2026-05-28-optimistic-locking-coverage-completion.md) | New action endpoints might omit versions | All editable records expose updatedAt, custom actions/children enforce own versions and surface shared conflicts |
+| [Staff decoupling](implemented/2026-05-08-staff-decouple-from-core.md) | Direct staff entity import or hard optional dependency | Source adapter/public projections and scoped IDs/snapshots; absent-source behavior explicit, no duplicate identity registry |
+| Existing workflows module | “Workflow” could mean a new runtime/instance type | WF1–WF5 are business journeys; v1 synchronous domain commands use no custom workflow engine or automation instance |
+| [Backward compatibility contract](../../BACKWARD_COMPATIBILITY.md) | New behavior might broaden existing view access or mutate core contracts | Additive app entities/actions/features only; no write authority from logistics.view, no source-schema or framework signature changes |
+
+- [x] Related specs, ownership and terminology conflicts reconciled; no shared entity receives two owners.
 
 ## 9. Reference App Quality Gate `Architect`
 
@@ -479,8 +536,11 @@ N/A: this is an operating company's internal app, not a reference app. Reuse sha
 | B2 | Fewer empty kilometres is primary | Manual mileage and custody records required in first release | User: CONFIRMED |
 | B3 | Manual dispatch first | GPS, AI, optimization, billing and portals excluded | User: CONFIRMED |
 | A1 | 10% relative reduction, 4 baseline + 8 pilot weeks | Proposed measurable pilot; no guarantee of impact | PM: proposed for final confirmation |
-| R1 | Own-fleet whole-job recovery handover with interrupted source outcome | Includes explicit physical release and atomic custody transfer; no split cargo | PM: adopted C1; context re-review pending |
-| R2 | Observed-snapshot eligibility, strong logistics exclusivity | Residual concurrent master edit/start race disclosed; no cross-module transaction claim | PM: adopted C2; context re-review pending |
+| R1 | Own-fleet whole-job recovery with interrupted source outcome | No cargo or unperformed active obligation may remain on terminal source | PM: adopted C1 and re-review fix; final verification pending |
+| R2 | Observed-snapshot eligibility, strong logistics exclusivity | Residual master edit/start race disclosed; no common transaction claim | Independent context re-review: resolved at specified consistency level |
+| P1 | Real cohort, reporting timezone and pilot start dates | Deployment configuration; no actual fleet roster supplied | Fleet manager: set/freeze before baseline; not a blocker to writing this spec |
+| P2 | Ability to obtain evidenced daily/night boundary readings | Determines actual comparison completeness | Fleet manager: operational pilot check; software must expose incompleteness |
+| G1 | Complete App Spec confirmation | Proceed to feature decomposition/implementation or revise business scope | User: pending final reviewed artifact |
 
 ## Production Readiness `PM`
 
@@ -537,6 +597,8 @@ Integration tests ship with their owning changes under `apps/mercato/src/modules
 | LOG-OP-16 | All existing seven nav URLs, new create/detail/settings routes, keyboard/mobile, five locales, empty versus planned state, direct URL guards and unchanged Customers navigation |
 
 **Master race test:** insert an unavailable source rule after eligibility observation but before assignment/start commit; prove observed versions/time are retained, booking exclusivity remains strong and next authoritative refresh detects review/disruption. Do not assert a cross-module serialization guarantee that is expressly excluded.
+
+Additional mandatory traces from review: source with onboard A and unpicked B cannot interrupt after handing over A until B is released/cancelled; valid delivery without odometer ends custody and permits physical finish while mileage remains incomplete; Monday failed delivery → Tuesday revised retry → success has no duplicate overdue item; return/handover lateness is not measured against the original delivery promise. Verify populated-dashboard Create job/Plan trip actions and execution-only missing-reading repair without manager privilege.
 
 **Implementation gate runner:** select Docker/local once per gate sequence per `.ai/docs/agent-instructions.md`; record chosen runner. Run the ordered `.ai/agentic.config.json` gate, focused operational integrations and actual UI QA. Existing recorded Windows full-suite limitations must be reported, not hidden by a small focused pass. Spec-only validation uses local relative-link, required-section and diff checks; no application build/test claim is made for this document.
 

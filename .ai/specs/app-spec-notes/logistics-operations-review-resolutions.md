@@ -18,3 +18,15 @@ This records author responses; it is not an independent approval.
 Additional review-driven clarification: recovery targets remain draft candidates until the atomic handover; same-driver transfer caps the source reservation before reacquiring it. A CommandReceipt records committed action results for safe retry, without treating post-commit event delivery as part of the business transaction.
 
 Substantial domain changes require a fresh context re-review before the gate is marked passed.
+
+## Context re-review fae43cec and workflow review a284bb51
+
+- R2-C1 accepted: interruption now shares the no-active-unperformed-obligations/no-custody terminal predicate; unpicked jobs require explicit release/cancellation before or atomically with interruption. Added A-onboard/B-unpicked acceptance trace.
+- Historical-stop warning accepted: new promises validate pending effective attempts only; handover-in/out explicitly change custody and create mileage boundaries.
+- F1 accepted: a valid delivered/returned fact ends custody even without an odometer; only mileage stays incomplete.
+- F2 accepted: named WF1a/WF1b and WF4a/WF4b independent trigger/end contracts inside the five release groups; job acceptance does not depend on fleet availability, correction does not invent recovery.
+- F3 accepted: removed unmeasurable numerical intake/follow-up target; ordinary validation completeness is an operational input, not a claim of saved staff effort. Primary fixed-cohort empty-distance outcome remains measurable.
+- F4 accepted: overdue card limited to effective pickup/delivery obligations, single current attempt, superseded history excluded; separate plan lateness for return/handover/end.
+- F5 accepted: explicit populated-dashboard Create job and ready-job Plan trip actions, retained queue filters and execution-only first-reading repair on trip detail. Correction remains manager-only.
+
+These are author resolutions of specific counterexamples; independent final review still verifies them before all gates are marked passed.
