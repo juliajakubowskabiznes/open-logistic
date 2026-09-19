@@ -1,6 +1,6 @@
 # Logistics operational release — discovery and authoring plan
 
-Date: 2026-09-19. Status: discovery; business answers pending. This is a research note, not an approved App Spec or feature specification.
+Date: 2026-09-19. Status: business answers received; operational domain draft under review. This is a research note, not an approved App Spec or feature specification.
 
 ## Assignment
 
@@ -26,7 +26,7 @@ Extend [the existing Logistics App Spec](../2026-09-19-app-spec-logistics-dashbo
 2. Primary measurable release goal: proposed 30% reduction in median accepted-job-to-confirmed-assignment time, comparing two baseline weeks with four pilot weeks. This target is a proposal, not measured evidence or a commitment by the user.
 3. Release exclusions: proposed manual entry, manual planning and dispatcher-entered execution updates; GPS, optimization, AI, billing and driver/customer portals deferred. Confirm whether GPS or direct driver updates are necessary for the first usable release.
 
-The earlier foundation spec recorded business assumptions rather than confirmed answers. Do not silently promote them into confirmed requirements for the operational release.
+User answers: **Own-fleet transport company; Fewer empty kilometres; Yes—manual dispatch first.** These decisions replace the corresponding assumptions. The proposed dispatch-speed target was not selected. The operational App Spec retains the foundation's 10% relative empty-kilometre reduction as a clearly labelled proposal for final confirmation, not a user-confirmed target.
 
 ## Authoring sequence after discovery
 
@@ -47,4 +47,13 @@ The earlier foundation spec recorded business assumptions rather than confirmed 
 - Organization isolation, read/write features and absent optional-module behavior.
 - Dashboard metric definitions, filter scope, missing/stale/error states and data refresh behavior.
 
-No application code, feature specifications, database migrations or tracker mutations have been made during discovery. Independent challenger/architect gates have not yet run; they require authored sections.
+No application code, feature specifications, database migrations or tracker mutations have been made during discovery. The Phase 0 context challenger has been dispatched against the committed domain draft; other gates are pending authored sections.
+
+## Additional platform evidence
+
+- `plannerAvailabilityService.getMergedAvailabilityWindows` accepts supplied rules and a date range, not subject IDs or a booking request. It does not query source data or serialize assignments. A logistics boundary must read authorized source projections, distinguish no rules from a service failure, and validate the returned coverage.
+- `planner/lib/availabilityMerge.ts` parses a constrained DAILY/WEEKLY representation, uses UTC expansion and treats once-only rules as full days. Do not promise arbitrary recurrence or timezone semantics that this implementation does not provide. Test the supported planner editor output around DST and expose unsupported schedules explicitly.
+- `planner/api/availability.ts` supports subjectType and comma-separated subjectIds with pageSize ≤100; complete availability reads must not silently use just the first page. Existing rule-set and subject rules must both be considered.
+- `shared/lib/commands/runCrudCommandWrite.ts` commits entity phases through withAtomicFlush and then performs custom-field and side-effect work. Post-commit side-effect failure does not imply the business transaction rolled back. The command result/retry and event-delivery policy must distinguish these cases.
+- `shared/lib/commands/command-interceptor.ts` exposes before/after execute and undo hooks, but does not itself guarantee a shared transaction with another module's writes. Do not claim a before hook alone eliminates master-data races.
+- `ui/backend/schedule/types.ts` provides day/week/month/agenda modes with dated resource/member items. A first dispatch board can combine this with DataTable and standard detail/forms; no custom drag-and-drop planning engine is required.
