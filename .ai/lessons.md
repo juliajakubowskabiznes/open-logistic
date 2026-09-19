@@ -194,4 +194,3 @@ This catalog indexes 144 focused lessons. Route the task first, then read only r
 - [Confirm the delivery repository after an owner correction](lessons/confirm-delivery-repository-after-owner-correction.md) — area:spec-pr,ai-workflow; module:platform; topic:repository-target,pull-requests
 
 - [Credit the author, not the merger, when generating a changelog](lessons/credit-the-author-not-the-merger-in-a-changelog.md) — area:spec-pr,ai-workflow; module:platform; topic:data-integrity,generated-files
-
