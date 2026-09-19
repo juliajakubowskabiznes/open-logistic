@@ -223,7 +223,8 @@ export function TransportsTable() {
       searchPlaceholder={t('logistics.transports.search')}
       filters={filterDefs}
       filterValues={filters}
-      onFiltersChange={setFilters}
+      onFiltersApply={setFilters}
+      onFiltersClear={() => setFilters({})}
       pagination={{
         page,
         pageSize: PAGE_SIZE,

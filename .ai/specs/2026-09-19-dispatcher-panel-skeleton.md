@@ -356,3 +356,16 @@ Brak.
 - **Commands**: Passed po poprawce — komendy `sales` przyjmują `statusEntryId`, dodane rozwiązywanie wpisu słownika
 - **Risks**: Passed — dodane kody `not_a_carrier`, `missing_vehicle_capacity`, `conflict`, `status_entry_missing`; `pendingOrderId` w wierszu; historia odrzuconych Order 2; `navHidden` na szczegółach; rola `dyspozytor` tworzona przez seed
 - **Verdict**: Approved (rekomendacja recenzenta: Faza 0 jako osobny PR — przyjęta jako opcja, nie wymóg)
+
+## Implementation Status — 2026-09-19
+
+- **Faza 0 ukończona:** menu „Nasza firma” ma AI Inbox / Oferty i AI Przewozy; siedem starych zaślepek usunięto.
+- **Faza 1 ukończona:** pola transportowe rozszerzają `sales_order` i profil firmy; dostępne są list/detail API, tabela przewozów, szczegóły Order 1 / Order 2, historia i obliczenie wolnej ładowności.
+- **Demo seed ukończony:** cztery transporty pokrywają przewoźnika oczekującego, zaakceptowanego z doładunkiem, przeciążenie oraz brak przewoźnika.
+- **Katalog pojazdów:** FTL, trzy warianty Solo i dwa Busy wraz z cennikiem EUR/km, cenami minimalnymi i dopłatą za windę. Brakujące parametry FTL pozostają jawnie `null`; `Solo 18t DMC` zachowuje przekazane 1 000 kg do potwierdzenia.
+- **Faza 2 pozostaje:** endpointy decyzji i przyciski zatwierdź/odrzuć nie są częścią tego wdrożenia.
+- **Weryfikacja:** `yarn workspace @open-mercato/app typecheck` oraz testy modułu przechodzą; generator przechodzi z istniejącym ostrzeżeniem fallbacku OpenAPI na Node 26.
+
+### Changelog implementacji
+
+- 2026-09-19 — wdrożono Fazy 0–1, seed, katalog pojazdów, pięć locale i testy jednostkowe; kod na `feat/dispatcher-panel-skeleton`.

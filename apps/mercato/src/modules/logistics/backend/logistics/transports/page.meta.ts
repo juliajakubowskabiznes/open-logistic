@@ -2,7 +2,7 @@ export const metadata = {
   requireAuth: true,
   requireFeatures: ['logistics.view'],
   pageTitle: 'AI Transports',
-  pageTitleKey: 'logistics.nav.transports',
+  pageTitleKey: 'logistics.nav.aiTransports',
   pageGroup: 'Our company',
   pageGroupKey: 'logistics.nav.group',
   pageOrder: 20,

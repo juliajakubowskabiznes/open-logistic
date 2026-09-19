@@ -3,7 +3,7 @@ import type { AwilixContainer } from 'awilix'
 import type { CommandBus, CommandRuntimeContext } from '@open-mercato/shared/lib/commands'
 import type { DataEngine } from '@open-mercato/shared/lib/data/engine'
 import { findWithDecryption } from '@open-mercato/shared/lib/encryption/find'
-import { ensureRoles } from '@open-mercato/core/modules/auth/lib/setup-app'
+import { ensureCustomRoleAcls, ensureRoles } from '@open-mercato/core/modules/auth/lib/setup-app'
 import { installCustomEntitiesFromModules } from '@open-mercato/core/modules/entities/lib/install-from-ce'
 import { CustomerEntity } from '@open-mercato/core/modules/customers/data/entities'
 import { CustomFieldValue } from '@open-mercato/core/modules/entities/data/entities'
@@ -304,6 +304,7 @@ export async function seedLogisticsExamples(
 ): Promise<void> {
   const log = options.logger ?? (() => undefined)
   await ensureRoles(em, { roleNames: [LOGISTICS_DISPATCHER_ROLE], tenantId: scope.tenantId })
+  await ensureCustomRoleAcls(em, scope.tenantId)
   await installCustomEntitiesFromModules(em, null, {
     entityIds: [...LOGISTICS_ENTITY_IDS],
     tenantIds: [scope.tenantId],
@@ -327,7 +328,7 @@ export async function seedLogisticsExamples(
   await ensureCarrierProposal(em, container, scope, transportA, {
     carrierCustomerId: carrierNorth,
     carrierCost: 2_450,
-    vehicleType: 'Curtainsider semi-trailer',
+    vehicleType: 'FTL',
     vehicleCapacityPallets: 33,
     vehicleCapacityKg: 24_000,
     vehiclePlate: 'DW 5DEMO',
@@ -339,7 +340,7 @@ export async function seedLogisticsExamples(
   await ensureCarrierProposal(em, container, scope, transportB, {
     carrierCustomerId: carrierPol,
     carrierCost: 3_300,
-    vehicleType: 'Curtainsider semi-trailer',
+    vehicleType: 'FTL',
     vehicleCapacityPallets: 33,
     vehicleCapacityKg: 24_000,
     vehiclePlate: 'PO 7DEMO',
@@ -363,7 +364,7 @@ export async function seedLogisticsExamples(
   await ensureCarrierProposal(em, container, scope, transportC, {
     carrierCustomerId: carrierEuro,
     carrierCost: 1_950,
-    vehicleType: 'Rigid truck',
+    vehicleType: 'Solo 12t DMC',
     vehicleCapacityPallets: 18,
     vehicleCapacityKg: 10_000,
     vehiclePlate: 'B DEMO 3',

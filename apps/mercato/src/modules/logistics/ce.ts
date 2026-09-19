@@ -1,6 +1,7 @@
 import type { CustomEntitySpec } from '@open-mercato/shared/modules/entities'
 import { cf } from '@open-mercato/shared/modules/dsl'
 import { E } from '@/.mercato/generated/entities.ids.generated'
+import { VEHICLE_TYPE_NAMES } from './lib/vehicle-types'
 
 const transportGroup = { code: 'transport', title: 'Transport' }
 const carrierGroup = { code: 'carrier', title: 'Carrier' }
@@ -84,7 +85,7 @@ export const entities: CustomEntitySpec[] = [
         group: transportGroup,
         formEditable: true,
       }),
-      cf.text('vehicle_type', {
+      cf.select('vehicle_type', [...VEHICLE_TYPE_NAMES], {
         label: 'Vehicle type',
         group: carrierGroup,
         formEditable: true,

@@ -7,3 +7,5 @@ export const features = [
     dependsOn: ['trans_inbox.view'],
   },
 ]
+
+export default features

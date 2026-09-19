@@ -198,7 +198,7 @@ function detailToRow(detail: TransportDetail): TransportRow {
   const pendingLoads = detail.additionalLoads.filter((order) => order.status === 'pending_approval')
   const approvedLoads = detail.additionalLoads.filter((order) => order.status === 'approved')
   const carrierStatus = detail.order2?.status
-  const carrier = detail.order2 && (carrierStatus === 'pending_approval' || carrierStatus === 'approved')
+  const carrier: TransportRow['carrier'] = detail.order2 && (carrierStatus === 'pending_approval' || carrierStatus === 'approved')
     ? {
         orderId: detail.order2.id,
         name: detail.order2.customerName,
