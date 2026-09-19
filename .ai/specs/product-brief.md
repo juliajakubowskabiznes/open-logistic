@@ -3,7 +3,7 @@
 - Date: 2026-09-19
 - Mode: existing (+ sprawdzenia dla własnego pomysłu: brak użytkowników); Owner: Julia Jakubowska (ekran spedytora); Pass: Quick pass
 - Evidence basis: kod forka `open-logistic` (moduł `logistics`, 7 stron + dane + agenci), tablica zespołu z 2026-09-19 (dwa zrzuty: diagram procesu, szkic ekranu) i decyzje Julii z tej sesji. Brak rozmów z prawdziwym spedytorem i danych z użycia; potrzeba „szybkich decyzji per przewóz” jest przekonaniem zespołu, nie obserwacją.
-- Coverage: 23 claims — 19 sourced (interview 0, data 0, document 16, product 3, benchmark 0), 0 synthetic, 4 assumed; 0 entries on the collection plan
+- Coverage: 24 claims — 20 sourced (interview 0, data 0, document 17, product 3, benchmark 0), 0 synthetic, 4 assumed; 0 entries on the collection plan
 - Synthetic hypotheses outside Coverage: 0
 - Definition of Ready signed by: not yet signed — brakuje potwierdzenia zespołu (Q01) i formy „dodatkowego załadunku” (Q02); ready for: implementation planning of the stated scope (szkielet panelu), nie dla wpięcia AI
 - Sources: `apps/mercato/src/modules/logistics/` (stan na commit `5bfe0388`), `.ai/specs/2026-09-19-app-spec-logistics-dashboard.md`, `README.md`, tablica zespołu 2026-09-19 (zrzuty w sesji), `.ai/specs/research/decisions/2026-09-19-panel-spedytora.md`
@@ -52,7 +52,7 @@ Spedytor ma jeden ekran, na którym widzi wszystkie przewozy i jednym kliknięci
 
 ## Scope
 
-- **Now:** nowy moduł-nakładka z grupą menu (2 pozycje), stroną „AI Przewozy” (tabela: klient, trasa, status Order 1, status Order 2, akcje „zatwierdź przewoźnika” / „zatwierdź dodatkowy załadunek”), ekranem szczegółów przewozu (sekcja Order 1, sekcja Order 2), pozycją „AI Inbox / Offers” prowadzącą do wbudowanej skrzynki OM; dane = zamówienia sprzedaży z seedu; R01–R03, D01–D04
+- **Now:** nowy moduł-nakładka z grupą menu (2 pozycje), stroną „AI Przewozy” (tabela: klient, trasa, status Order 1, status Order 2, akcje „zatwierdź przewoźnika” / „zatwierdź dodatkowy załadunek”), ekranem szczegółów przewozu (sekcja Order 1, sekcja Order 2 z autem i wolnym miejscem wg R04), pozycją „AI Inbox / Offers” prowadzącą do wbudowanej skrzynki OM; dane = zamówienia sprzedaży z seedu; R01–R03, D01–D04
 - **Later:** wpięcie A1 (wycena z maila), A2 (szukanie przewoźnika na giełdzie), A3 (dodatkowy załadunek w trasie), ewentualny powrót logiki z usuniętego modułu (D01)
 - **Not doing:** see Non-goals
 
@@ -62,9 +62,10 @@ Spedytor ma jeden ekran, na którym widzi wszystkie przewozy i jednym kliknięci
 |---|---|---|---|
 | Przewóz | jednostka pracy spedytora: dokładnie jedno Order 1 i 0–1 Order 2 | logistics | spedytor |
 | Order 1 | zamówienie klient → nasza firma (zamówienie sprzedaży OM) | sales | spedytor |
-| Order 2 | zamówienie nasza firma → przewoźnik z giełdy; osobny rekord zamówienia powiązany z Order 1 (D02) | sales + logistics | spedytor |
+| Order 2 | zamówienie nasza firma → przewoźnik z giełdy; osobny rekord zamówienia powiązany z Order 1, niesie dane auta: typ, ładowność/wielkość (D02, R04) | sales + logistics | spedytor |
 | Giełda | zewnętrzne źródło przewoźników i ładunków; w demo symulowane | poza zakresem | — |
-| Dodatkowy załadunek | ładunek z giełdy dołożony do jadącego auta (A3); forma zapisu otwarta (Q02) | logistics | spedytor |
+| Dodatkowy załadunek | ładunek z giełdy dołożony do jadącego auta (A3); mieści się tylko w wolnym miejscu z R04; forma zapisu otwarta (Q02) | logistics | spedytor |
+| Wolne miejsce | ładowność auta z Order 2 minus wielkość towaru z Order 1 (R04) | logistics | spedytor |
 
 ## Key flows
 
@@ -78,6 +79,7 @@ Spedytor ma jeden ekran, na którym widzi wszystkie przewozy i jednym kliknięci
 | R01 | Przewóz bez Order 1 nie istnieje: nie da się utworzyć Order 2 ani przewozu bez istniejącego zamówienia klienta | tabela, szczegóły, API | `[DOCUMENT]` wiadomość Julii 2026-09-19 | active | koniec hackathonu | Julia | Julia Jakubowska | none |
 | R02 | Zatwierdzenie przewoźnika i dodatkowego załadunku wykonuje człowiek jednym kliknięciem; agent tylko proponuje | akcje w tabeli i szczegółach | `[DOCUMENT]` decyzja Julii 2026-09-19 ~15:00 (pamięć sesji) | active | koniec hackathonu | Julia | Julia Jakubowska | none |
 | R03 | Kod tylko w `apps/mercato/src/modules/<moduł>`; brak zmian w `packages/*` i migracji własnych tabel | cały moduł | `[DOCUMENT]` zasady tracku AI Company | active | koniec hackathonu | zespół | Julia Jakubowska | none |
+| R04 | Order 2 przechowuje dane auta (ładowność/wielkość). Wolne miejsce = ładowność auta z Order 2 − wielkość towaru z Order 1; dodatkowy załadunek wybiera się tylko w granicach wolnego miejsca | ekran szczegółów, akcja „zatwierdź dodatkowy załadunek”, A3 | `[DOCUMENT]` wiadomość Julii 2026-09-19 (po sesji) | active | koniec hackathonu | Julia | Julia Jakubowska | none |
 
 ## Non-goals
 
@@ -91,7 +93,7 @@ Spedytor ma jeden ekran, na którym widzi wszystkie przewozy i jednym kliknięci
 | Id | Date | Decision | Why | Owner | Status | Review by | Required path to change | Source | Supersedes |
 |---|---|---|---|---|---|---|---|---|---|
 | D01 | 2026-09-19 | Usunąć cały moduł `logistics` (strony, lib, api, agenci, kopia w `packages/create-app/template`, docs/logistics) i zacząć panel od zera | Julia wybrała czysty start ponad zachowanie logiki; alternatywy: skasować tylko strony i zostawić lib/api (rekomendacja agenta, odrzucona) lub dołożyć 2 zakładki obok 7 stron | Julia Jakubowska | active | Q01 (zespół) | zespół | `[DOCUMENT]` odpowiedź Julii w sesji 2026-09-19 | none |
-| D02 | 2026-09-19 | Order 2 = osobny rekord zamówienia sprzedaży powiązany z Order 1 polem dodatkowym | bliżej diagramu procesu; alternatywa: pola przewoźnika na tym samym zamówieniu (rekomendacja agenta, odrzucona) | Julia Jakubowska | active | po demo | Julia | `[DOCUMENT]` odpowiedź Julii w sesji 2026-09-19 | none |
+| D02 | 2026-09-19 | Order 2 = osobny rekord zamówienia sprzedaży powiązany z Order 1 polem dodatkowym; niesie dane auta i ładowność (R04) | bliżej diagramu procesu; alternatywa: pola przewoźnika na tym samym zamówieniu (rekomendacja agenta, odrzucona) | Julia Jakubowska | active | po demo | Julia | `[DOCUMENT]` odpowiedź Julii w sesji 2026-09-19 | none |
 | D03 | 2026-09-19 | „AI Inbox / Offers” = link do wbudowanego modułu `inbox_ops` (`/backend/inbox-ops`), nie własna strona | zero pracy, zespół A1 wpina się w gotową skrzynkę; alternatywy: placeholder lub własna tabela ofert | Julia Jakubowska | active | po demo | Julia | `[DOCUMENT]` odpowiedź Julii w sesji 2026-09-19 | none |
 | D04 | 2026-09-19 | Zakres tego przebiegu = menu (2 pozycje) + tabela przewozów z szybkimi decyzjami + ekran szczegółów Order 1 / Order 2 | to część, za którą Julia odpowiada w zespole; reszta wpinana później | Julia Jakubowska | active | koniec hackathonu | Julia | `[DOCUMENT]` wiadomość Julii i szkic ekranu 2026-09-19 | none |
 
@@ -115,7 +117,7 @@ Brak — nie było paneli syntetycznych.
 | Id | Question | Blocking | Who can answer | Status |
 |---|---|---|---|---|
 | Q01 | Czy zespół (Łukasz Wacławek) zgadza się na usunięcie modułu `logistics`, jego speca Etapu 1 (PR #8 z naszym kodem jest już zamknięty bez merge)? | tak — D01 wykonana bez zgody zespołu tworzy konflikt z `develop` forka i PR #7 | Łukasz Wacławek | open |
-| Q02 | Jak zapisujemy „dodatkowy załadunek”: trzecie zamówienie powiązane z przewozem, czy pole na Order 1? | częściowo — blokuje akcję „zatwierdź dodatkowy załadunek”, nie tabelę ani szczegóły | Julia z zespołem (A3) | open |
+| Q02 | Jak zapisujemy „dodatkowy załadunek”: trzecie zamówienie powiązane z przewozem, czy pole na Order 1? Wyliczenie wolnego miejsca ustalone (R04); otwarta tylko forma zapisu | częściowo — blokuje zapis akcji „zatwierdź dodatkowy załadunek”, nie tabelę, szczegóły ani pokazanie wolnego miejsca | Julia z zespołem (A3) | open |
 | Q03 | Czy pozostałe grupy menu OM (CRM, sprzedaż…) chowamy dla demo przez `/backend/sidebar-customization`, czy zostają? | nie | Julia | open |
 
 ## Definition of Ready addendum (existing)
