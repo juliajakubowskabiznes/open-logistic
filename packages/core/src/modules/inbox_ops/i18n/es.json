@@ -16,6 +16,7 @@
   "inbox_ops.action.reject_all_confirm": "\u00bfRechazar todas las acciones pendientes en esta propuesta?",
   "inbox_ops.action.retry": "Reintentar",
   "inbox_ops.action.review": "Revisar",
+  "inbox_ops.action.view_quote_details": "Ver detalles del presupuesto",
   "inbox_ops.action_type.create_contact": "Crear contacto",
   "inbox_ops.action_type.create_order": "Crear pedido de venta",
   "inbox_ops.action_type.create_product": "Crear producto",

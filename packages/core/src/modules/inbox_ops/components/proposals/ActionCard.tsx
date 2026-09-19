@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Link from 'next/link'
 import { Button } from '@open-mercato/ui/primitives/button'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import {
@@ -17,6 +18,7 @@ import {
   Link2,
   Activity,
   ShoppingBag,
+  ExternalLink,
 } from 'lucide-react'
 import type { ActionDetail, DiscrepancyDetail } from './types'
 import { hasContactNameIssue } from '../../lib/contactValidation'
@@ -254,10 +256,20 @@ export function ActionCard({
         </div>
         <p className="text-sm text-muted-foreground">{displayDescription}</p>
         {action.createdEntityId && (
-          <div className="mt-2">
+          <div className="mt-2 space-y-3">
             <span className="text-xs text-status-success-text">
               {t('inbox_ops.action.created_entity', 'Created {type}').replace('{type}', action.createdEntityType || '')} · {action.executedAt && new Date(action.executedAt).toLocaleString()}
             </span>
+            {action.actionType === 'create_quote' && (
+              <div>
+                <Button asChild type="button" variant="outline" size="sm" className="h-11 md:h-9">
+                  <Link href={`/backend/sales/quotes/${encodeURIComponent(action.createdEntityId)}`}>
+                    {t('inbox_ops.action.view_quote_details', 'View quote details')}
+                    <ExternalLink className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

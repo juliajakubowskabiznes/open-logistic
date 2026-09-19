@@ -74,6 +74,20 @@ describe('ActionCard status visibility', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
+  it('links an executed quote action to the created quote details', () => {
+    renderCard(makeAction({
+      actionType: 'create_quote',
+      status: 'executed',
+      createdEntityId: 'quote-1',
+      createdEntityType: 'sales_quote',
+    }))
+
+    expect(screen.getByRole('link', { name: /View quote details/i })).toHaveAttribute(
+      'href',
+      '/backend/sales/quotes/quote-1',
+    )
+  })
+
   it('never fires an accept mutation because accepted actions expose no clickable buttons', () => {
     const { onAccept } = renderCard(makeAction({ status: 'accepted' }))
     expect(screen.queryByRole('button')).not.toBeInTheDocument()

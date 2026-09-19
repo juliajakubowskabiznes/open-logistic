@@ -16,6 +16,7 @@
   "inbox_ops.action.reject_all_confirm": "Alle ausstehenden Aktionen in diesem Vorschlag ablehnen?",
   "inbox_ops.action.retry": "Wiederholen",
   "inbox_ops.action.review": "\u00dcberpr\u00fcfen",
+  "inbox_ops.action.view_quote_details": "Angebotsdetails anzeigen",
   "inbox_ops.action_type.create_contact": "Kontakt erstellen",
   "inbox_ops.action_type.create_order": "Verkaufsauftrag erstellen",
   "inbox_ops.action_type.create_product": "Produkt erstellen",

@@ -16,6 +16,7 @@
   "inbox_ops.action.reject_all_confirm": "이 제안의 대기 중인 작업을 모두 거부하시겠습니까?",
   "inbox_ops.action.retry": "재시도",
   "inbox_ops.action.review": "검토",
+  "inbox_ops.action.view_quote_details": "견적서 상세 보기",
   "inbox_ops.action_type.create_contact": "연락처 생성",
   "inbox_ops.action_type.create_order": "판매 주문 생성",
   "inbox_ops.action_type.create_product": "상품 생성",

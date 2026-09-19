@@ -16,6 +16,7 @@
   "inbox_ops.action.reject_all_confirm": "Odrzuci\u0107 wszystkie oczekuj\u0105ce akcje w tej propozycji?",
   "inbox_ops.action.retry": "Pon\u00f3w",
   "inbox_ops.action.review": "Przejrzyj",
+  "inbox_ops.action.view_quote_details": "Zobacz szczeg\u00f3\u0142y oferty",
   "inbox_ops.action_type.create_contact": "Utw\u00f3rz kontakt",
   "inbox_ops.action_type.create_order": "Utw\u00f3rz zam\u00f3wienie sprzeda\u017cy",
   "inbox_ops.action_type.create_product": "Utw\u00f3rz produkt",

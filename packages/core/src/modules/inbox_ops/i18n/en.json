@@ -16,6 +16,7 @@
   "inbox_ops.action.reject_all_confirm": "Reject all pending actions in this proposal?",
   "inbox_ops.action.retry": "Retry",
   "inbox_ops.action.review": "Review",
+  "inbox_ops.action.view_quote_details": "View quote details",
   "inbox_ops.action_type.create_contact": "Create Contact",
   "inbox_ops.action_type.create_order": "Create Sales Order",
   "inbox_ops.action_type.create_product": "Create Product",
