@@ -1,6 +1,7 @@
 import type { ModuleSetupConfig } from '@open-mercato/shared/modules/setup'
 import { findOneWithDecryption } from '@open-mercato/shared/lib/encryption/find'
 import { InboxSettings } from './data/entities'
+import { seedInboxOpsExamples } from './lib/seedExamples'
 
 export const setup: ModuleSetupConfig = {
   defaultRoleFeatures: {
@@ -42,6 +43,10 @@ export const setup: ModuleSetupConfig = {
   },
 
   async seedDefaults() {},
+
+  async seedExamples({ em, container, tenantId, organizationId }) {
+    await seedInboxOpsExamples(em, container, { tenantId, organizationId })
+  },
 }
 
 export default setup
