@@ -1,6 +1,6 @@
 # App Spec: Logistics — first operational release
 
-Date: 2026-09-19. Status: REVIEW CANDIDATE — complete App Spec, final independent closure pending; not approved for implementation.
+Date: 2026-09-19. Status: COMPLETE AND INDEPENDENTLY REVIEWED — awaiting user confirmation before feature specifications or implementation.
 
 This operational extension of the [Logistics foundation App Spec](2026-09-19-app-spec-logistics-dashboard.md) is the source of truth for the next release. The foundation retains ownership of its seven navigation URLs and historical acceptance record. This document owns all new transport business rules; later feature specifications must conform to it. It is an App Spec, not a feature specification or evidence of working operational software.
 
@@ -189,7 +189,7 @@ Commands enforce protected fields and these feature combinations server-side; ge
 Portal: NOT USED, as confirmed. Dispatchers/managers need internal tooling; drivers/customers receive no disguised internal accounts. Existing master-data access requires corresponding customers/resources/staff/planner features; linked pages remain permission-aware. Restrict logistics selector responses to the fields necessary for dispatch; no raw staff data exposure. All user input and errors use translations; no secondary identity store.
 
 - [x] One identity per persona, scoped feature-based authorization and portal decision defined.
-- [ ] Independent identity/context review passed.
+- [x] Independent identity/context review passed; retained final review and precision closure record the gate disposition.
 
 ## 3. Workflows `PM`
 
@@ -285,7 +285,7 @@ Independent subflow boundaries: **WF4a physical recovery** starts at a disruptio
 
 - [x] Five workflows have bounded journeys, per-step mapping, outcomes and five production edge cases.
 - [x] Current versus proposed readiness is explicit; all operational workflows ship together.
-- [ ] Workflow challenger and architect checkpoint 1 passed.
+- [x] Workflow challenger and architect checkpoint 1 passed after independently verified corrections.
 
 ## 3.5 UI Architecture `PM + UX`
 
@@ -322,7 +322,7 @@ Keep the seven existing Logistics sidebar destinations and the app's global land
 
 - [x] Personas, navigation, task entry, useful widgets, routes and empty/failure states specified.
 - [x] Existing component families selected; no custom map or drag-and-drop engine.
-- [ ] Independent workflow/UX review passed.
+- [x] Independent workflow/UX review passed; original F1–F5 findings independently closed.
 
 ## 4. Workflow Gap Analysis `Architect`
 
@@ -344,7 +344,7 @@ Atomic estimates are testable commits, not days or a guarantee of cost. Score co
 **Workarounds:** human-entered route/time/distance estimates and existing driver reporting channels replace GPS/routing/portal integrations. They preserve a complete manual workflow, with explicitly incomplete mileage where reports lack evidence. No workaround replaces booking exclusivity or custody integrity.
 
 - [x] Every workflow step mapped/scored with shared commits deduplicated.
-- [ ] Architect checkpoint 1 passed; update estimates if it finds missed reuse.
+- [x] Architect checkpoint 1 passed; revised estimate is 25 work packages / 33 provisional atomic commits.
 
 ## 4.5 Module Architecture `Architect`
 
@@ -384,7 +384,7 @@ The reused merger interprets DAILY COUNT=1 as a full UTC calendar day. Accept su
 
 - [x] Module ownership, existing capabilities and extension seams identified.
 - [x] No new generic framework or unauthorized core modifications proposed.
-- [ ] Architect checkpoint 1 passed.
+- [x] Architect checkpoint 1 passed; final precision closure resolves the remaining supported-input boundary.
 
 ## 5. User Stories `PM`
 
@@ -491,7 +491,7 @@ C24–C25 add cross-flow verification/deployment documentation; union remains 33
 No platform-scoped commit is proposed, so no external tracker claim is needed for this mapping. A later architect finding requiring a platform change must be investigated read-only and recorded as a dependency; it cannot be disguised as app work.
 
 - [x] Every story mapped through capability ladder with shared work deduplicated.
-- [ ] Architect checkpoint 2 passed; any new dependencies resolved.
+- [x] Architect checkpoint 2 passed; no unavoidable new platform dependency, remaining availability findings independently closed.
 
 ## 7. Phasing & Rollout `PM`
 
@@ -556,7 +556,7 @@ No platform-scoped commit is proposed, so no external tracker claim is needed fo
 
 - [x] One complete operational release, dependencies, manual workarounds and measurable value identified.
 - [x] Independent DDD domain criteria received and challenged by PM; all accepted with bounded interpretations recorded.
-- [ ] Final rollout challenger passed.
+- [x] Final rollout challenger passed; retained rollout content approval plus independent precision closure.
 
 ## 8. Cross-Spec Conflicts `PM`
 
@@ -588,11 +588,11 @@ N/A: this is an operating company's internal app, not a reference app. Reuse sha
 | R2 | Observed-snapshot eligibility, strong logistics exclusivity | Residual master edit/start race disclosed; no common transaction claim | Independent context re-review: resolved at specified consistency level |
 | P1 | Real cohort, reporting timezone and pilot start dates | Deployment configuration; no actual fleet roster supplied | Fleet manager: set/freeze before baseline; not a blocker to writing this spec |
 | P2 | Ability to obtain evidenced daily/night boundary readings | Determines actual comparison completeness | Fleet manager: operational pilot check; software must expose incompleteness |
-| G1 | Complete App Spec confirmation | Proceed to feature decomposition/implementation or revise business scope | User: pending final reviewed artifact |
+| G1 | Complete App Spec confirmation | Proceed to feature decomposition/implementation or revise business scope | User: awaiting confirmation of this completed, reviewed artifact |
 
 ## Production Readiness `PM`
 
-Navigation foundation: implemented with [recorded verification](../../docs/logistics/verification.md), not rerun for this documentation work. Operational workflows: NOT deployable; no transport entities, APIs, commands or operational pages exist yet. Context/workflow/story and architecture reviews have produced the retained findings and author resolutions. Final independent closure is pending; implementation and its checks have not started.
+Navigation foundation: implemented with [recorded verification](../../docs/logistics/verification.md), not rerun for this documentation work. Operational workflows: NOT deployable; no transport entities, APIs, commands or operational pages exist yet. All App Spec review gates pass through the [final review](app-spec-notes/challenger-logistics-operations-final.md) and [targeted closure](app-spec-notes/challenger-logistics-operations-precision-closure.md). Implementation and its checks have not started; unchecked release acceptance criteria remain future runtime obligations.
 
 ## API Contracts / Migration & Backward Compatibility
 
@@ -669,10 +669,12 @@ Additional mandatory traces from review: source with onboard A and unpicked B ca
 | Workflows and stories | Five complete workflow groups, with independent readiness/intake and recovery/correction boundaries; sixteen stories and impact rows |
 | Delivery estimate | One operational software release; 25 work packages / 33 provisional atomic commits; baseline and pilot follow |
 | Domain acceptance | Twelve independently authored criteria accepted after PM challenge; implementation evidence outstanding |
-| Review gates | Context, workflow, story and two architect reviews retained; their final fixes and rollout await independent closure |
+| Review gates | Context, workflow, story, both architect checkpoints and rollout PASS at App Spec level; historical findings and independent closure retained |
 | Proposed business target | 10% relative reduction, four baseline weeks and eight pilot weeks; proposal for final confirmation |
 | Remaining decisions | User confirmation; fleet manager configures cohort/timezone/dates and verifies boundary-reading practice before baseline |
 | Implementation | Not started; no application test/build or deployment claim |
+
+Review evidence: [final gate dispositions](app-spec-notes/challenger-logistics-operations-final.md), [approved precision closure](app-spec-notes/challenger-logistics-operations-precision-closure.md), [documentation verification](app-spec-notes/logistics-operations-spec-verification.md). No unresolved specification blocker remains; user confirmation and later deployment configuration are still required.
 
 No feature specifications or code before completed App Spec confirmation. After confirmation, `om-spec-writing` decomposes independently deployable capabilities while preserving the single complete operational release and all end-to-end failure paths.
 
@@ -682,3 +684,5 @@ No feature specifications or code before completed App Spec confirmation. After 
 - Began operational extension after user confirmed own fleet, fewer empty kilometres and manual dispatch.
 - Retained the existing foundation and its navigation contracts; added precise proposed domain/identity rules and a complete-mileage measurement requirement.
 - Completed workflows, UI architecture, sixteen stories and impact/gap matrices, guarded API inventory, 33-commit provisional rollout, integration coverage and twelve independently authored domain acceptance criteria. Applied review fixes for recovery, source availability, read-only detection, correction/retry history and metric denominators.
+
+- Closed all App Spec review gates through independent final review and targeted timestamp-precision approval; awaiting user confirmation. Runtime acceptance remains unexecuted.

@@ -52,3 +52,9 @@ These are author resolutions of specific counterexamples; independent final revi
 - Context/identity, workflow/UX and story/criteria passed independently as App Spec gates. S-C1 and S-W1 closed; previous R2-C1 and F1–F5 closures retained. Rollout content itself passed, with final readiness dependent on the remaining architecture precision fix.
 - F-B1 accepted: supported DTSTART now has exact YYYYMMDDTHHmm00Z form, zero seconds and no fractions. Reject seconds before the integral-minute crossing calculation, without truncation/rounding. C09b/LOG-OP-01 must cover the 16:00:30+8h unsupported input and 16:00:00+8h exact-midnight supported boundary against the same next-day unavailable override.
 - This is a bounded input-contract clarification, not a core change or new feature. Targeted independent closure remains required; no implementation/runtime pass is claimed.
+
+## Independent final closure (d64d0eb1 / e5f729eff)
+
+- F-B1 independently closed against 4ce3a9e99: exact zero-second grammar makes integral-minute crossing precise; negative seconds and positive exact-midnight conformance requirements retained.
+- Context, workflow and story approvals retained; architect checkpoints 1/2 and final rollout now pass at App Spec level. Main checklists record these reviewed dispositions, not a reinterpretation of the historical changes verdicts.
+- Ready for user confirmation only. No feature specification, implementation, runtime or deployment evidence is implied by closure.
