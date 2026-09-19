@@ -354,11 +354,110 @@ For source reads, implementation must select an existing sanctioned API or query
 
 ## 5. User Stories `PM`
 
-Pending Phase 2, including cross-story impacts.
+All actors below are internal accounts from §2. Driver-reported facts retain both the authenticated recorder and the reporting source. All failures leave committed state unchanged unless explicitly described as a post-commit unknown outcome; no optimistic success is shown while the server outcome is unknown.
+
+### WF1 — Intake
+
+**US01 — Prepare dispatch resources.** As a fleet manager, I link a resource and staff member to dispatch profiles so a plan can select known capacity and availability. Surface: Fleet profile forms. Success: one scoped profile per master, positive payload, explicit pallet policy, and eligibility explanation. **Happy:** select existing records, fill profile, save, open source availability editor. **Alternate:** disable a profile after current obligations are reviewed; retain all history and frozen-cohort membership. **Failure:** cross-org/stale/missing source or duplicate profile → validation/conflict, no orphan profile; unavailable planner → save permitted profile but eligibility remains unknown and confirmation disabled.
+
+**US02 — Accept a complete transport job.** As a dispatcher, I record a customer request so it appears once in the ready queue with usable constraints. Surface: Job create/detail. Success: acceptedAt stamped once, immutable accepted windows, ready state and complete required data. **Happy:** select customer, enter cargo/places/windows, accept. **Alternate:** save complete draft for later acceptance; duplicate customer reference prompts confirmation but does not require a globally unique reference. **Failure:** invalid pallet/weight/window, lost authorization or stale draft → no acceptance; network timeout → original request reconciliation, no duplicate job. Abandoned unsaved form creates nothing; saved draft remains visible.
+
+### WF2 — Planning
+
+**US03 — Build a combined trip draft.** As a dispatcher, I order jobs and end positioning so I can compare compatible jobs/return loads. Surface: Trip create/detail. Success: persisted ordered draft and load preview, with zero reservations or job-state changes. **Happy:** add ready jobs and pickup/delivery stops, select proposed resources, add final end. **Alternate:** omit optional estimated distances; estimates remain explicitly distinct from actual mileage. **Failure:** no longer ready candidate or invalid ordering → show conflict/validation and preserve draft; abandonment never books resources.
+
+**US04 — Confirm one exclusive assignment.** As a dispatcher, I confirm a feasible draft so other dispatchers see its job and resource commitments. Surface: Trip detail confirmation. Success: assignment, job memberships/statuses, plan/source snapshot and receipt commit together. **Happy:** current source observation + promises + load sequence + booking checks pass. **Alternate:** adjust an adjacent reservation's boundary after explicit feasibility confirmation. **Failure:** two dispatchers choose the same job/vehicle/driver → one succeeds, one receives actionable conflict; no partial booking or lost original draft. Idempotent replay returns the same assignment.
+
+**US05 — Change a confirmed plan without losing its booking.** As a dispatcher, I replan, record customer-agreed windows or release unpicked work so changed requirements remain executable. Surface: Job/Trip detail. Success: a new immutable plan/promise revision with the old plan retained; failed change keeps the old reservation intact. **Happy:** revalidate and atomically replace affected memberships/stops/bookings. **Alternate:** cancel a not-started trip, returning its unpicked jobs to ready; during execution release only unpicked jobs and skip their remaining stops. **Failure:** new resource conflict, changed job version or onboard cargo release request → whole operation rejected. Assigned promise edits require the combined replan action and both features, not a separate blind job PUT.
+
+### WF3 — Execution
+
+**US06 — Record departure.** As a dispatcher, I record a driver-reported departure so the board shows the vehicle/driver occupied. Surface: Trip detail. Success: observed eligibility, version checks and exclusive occupancy precede the committed departure fact. **Happy:** start planned trip with actual time and recorded/missing odometer. **Alternate:** actual late departure is truthful, resulting downstream promises may require WF4 review. **Failure:** prior trip still active, unsupported source or revoked grant → no start; source changed after observation follows the explicit residual-race contract and becomes review/disruption on discovery.
+
+**US07 — Record a stop outcome.** As a dispatcher, I record each full pickup, delivery or failed attempt so custody and mileage load state match reports. Surface: Trip detail Record stop dialog. Success: incoming leg uses previous cargo state; pickup changes following legs; terminal delivery ends custody once. **Happy:** record valid ordered fact and reading. **Alternate:** late fact is accepted with lateness; missing reading retains physical truth and creates a reconciliation task. **Failure:** delivery before pickup, future timestamp, unrelated stop/job or duplicate conflicting fact → reject without altering cargo; same request retry returns original outcome.
+
+**US08 — Finish physical work and release resources.** As a dispatcher, I record final arrival/end so a physically finished trip no longer occupies resources. Surface: Trip detail. Success: no onboard cargo/current unsettled obligation, effective final end, actualEnd and physical releases. **Happy:** all current jobs terminal and disruptions resolved, complete trip. **Alternate:** every unpicked job was released, so finish empty; missing readings remain visible under WF5. **Failure:** outstanding cargo or unexplained resource release → refusal with remaining obligations; historical released jobs do not create a deadlock.
+
+### WF4 — Recovery and correction
+
+**US09 — Recover a failed attempt.** As a dispatcher, I record a delay/failed pickup/delivery and agree retry or return so every cargo item still has a next step. Surface: Disruptions queue → trip detail. Success: original attempt/window persists, new effective promise/attempt is explicit, return remains loaded until actual handback. **Happy:** append linked retry stop with agreed windows. **Alternate:** cancel/release never-collected cargo, or return collected cargo to its pickup place. **Failure:** window revision without agreement, reservation conflict or attempt to cancel onboard job → reject change and keep disruption open. Closing a dialog leaves existing custody untouched.
+
+**US10 — Hand cargo to a recovery vehicle.** As an operations manager, I transfer whole onboard jobs to another own-fleet trip so breakdown recovery does not invent delivery. Surface: Source trip Recovery dialog and target trip detail. Success: exactly one custodian per transferred job, both trip histories linked, receiver active, source can interrupt/release when physically ended. **Happy:** prepare draft receiver; atomically validate/confirm/start it and transfer selected complete jobs. **Alternate:** reuse source driver with atomic release/reacquire; transfer subset of whole jobs only if source still has a driver and valid plan for remaining cargo. **Failure:** one selected job invalid, concurrent delivery/transfer, stale version or insufficient capacity → rollback all selected jobs/receiver activation; retry same receipt, never partial transfer. Same-vehicle recovery uses resume, not handover.
+
+**US11 — Correct a mistaken report.** As an operations manager, I submit an evidenced replacement/void so reporting errors can be repaired without rewriting reality. Surface: Trip history or Mileage correction dialog. Success: one effective successor, consistent custody/load, invalidated affected reconciliations and preserved original evidence. **Happy:** fix a misentered time/reading with correct references and reason. **Alternate:** void a duplicate erroneous assertion when no later dependency makes it impossible. **Failure:** competing successor, changing another organization's fact or contradiction with later physical trip/booking → conflict and no change; no force override. New physical return/handover is never submitted as correction.
+
+### WF5 — Measurement
+
+**US12 — Record all vehicle movement.** As a mileage manager, I add non-trip legs and missing evidenced odometer boundaries so positioning/workshop kilometres remain counted. Surface: Mileage page; execution reports also add trip boundaries under execution permission. Success: no duplicate/overlapping effective movement; load is derived for trip legs and provenance recorded outside trips. **Happy:** complete between-stop readings and non-trip positioning. **Alternate:** record unknown-load leg while investigation continues. **Failure:** reversed odometer/time, unjustified estimated boundary or competing ledger update → no fabricated verified distance; retain explicit gap. Ordinary mileage entry cannot freely change trip load classification.
+
+**US13 — Reconcile a vehicle-day.** As a mileage manager, I compare day envelope with effective legs so unknown/missing kilometres are visible. Surface: Mileage page vehicle-day detail. Success: distance coverage is exact once; classified/unknown totals shown separately. **Happy:** complete evidence, review and reconcile. **Alternate:** evidenced zero-motion day produces T=0, not a zero-percent improvement; complete distance with unknown load remains ineligible for comparison. **Failure:** missing midnight evidence, overlapping legs, meter reset or stale review → refuse complete reconciliation and list gaps; corrections invalidate a prior reconciliation.
+
+**US14 — Measure a fixed fleet comparison.** As an operations manager, I freeze the measurement cohort and compare baseline with pilot so improvement is defensible. Surface: Measurement settings and Statistics. Success: fixed vehicles/timezone/periods, original/effective results traceable to ledger revisions; ratio shown only under §1.4 completeness predicate. **Happy:** freeze before baseline, collect four weeks then eight pilot weeks and evaluate relative reduction. **Alternate:** view whole-fleet live totals separately from the fixed-cohort comparison. **Failure:** incomplete days/unknown load/zero denominator → no improvement badge or percentage; late corrections recompute with revision and timestamp; changed cohort requires a new comparison.
+
+### Shared daily/access stories
+
+**US15 — Choose the next dispatch action.** As a dispatcher or authorized reader, I open the dashboard and see ready jobs, current trips, overdue obligations and resource observation age so I can select the next manual planning/recovery task. Surface: Dashboard. Success: counts and drill-through agree across pagination and scope; primary task entry ≤3 navigational clicks. **Happy:** filter day/place/resource and open plan/detail. **Alternate:** use agenda/table on mobile or keyboard. **Failure:** failed refresh shows stale prior snapshot and Retry, never zero; organization switch clears/ignores old-scope responses; read-only user sees no enabled write action and API denies direct writes.
+
+**US16 — Grant and revoke operating access.** As an administrator using existing access-management permissions, I grant the defined operational features so the correct colleagues can act without sharing accounts. Surface: Existing role/access editor; logistics pages inherit the result. Success: read-only remains read-only; exact and wildcard grants behave consistently; revoked effective grants block the next request. **Happy:** apply dispatcher/manager feature sets with needed minimal master read grants. **Alternate:** use an existing custom role name. **Failure:** stale ACL edit or missing admin feature → existing error/conflict handling; no logistics-specific authentication bypass. Already rendered content is not described as remotely erased from an open browser.
+
+**Demo stories:** N/A for production seeding. No demo users/passwords or invented operational records are created in live tenants. Self-contained integration fixtures cover roles/entities across states and are cleaned up. Optional future sample data requires a separate explicit demo setup and cannot enter real measurement cohorts.
+
+### Cross-story impact matrix
+
+| Story | State changed | Affected stories / conflict | Resolution and event responsibility |
+|---|---|---|---|
+| US01 | Profile eligibility/capacity | US03–US06, US10; stale constraints/orphan source | Logistics profiles share locks/version checks with assignment; master sources observed separately; reservations/custody retained and revalidated |
+| US02 | Accepted job/constraints | US03–US05; duplicate/stale candidate | Job versions and active-membership uniqueness; job.accepted |
+| US03 | Draft stop plan | US04, US10 | Draft version only; no booking/custody side effect or event cascade |
+| US04 | Booking, membership, job status | US04–US08, US10 | Serialize resource/job keys, atomic all-or-none confirmation; job.assigned/trip.planned after commit |
+| US05 | Promises/stops/memberships/reservations | US04, US06–US10 | Atomic replace retaining old plan on failure; released jobs excluded from current obligations; promise_revised/unassigned/replanned |
+| US06 | Active occupancy and departure | US04–US08, US10 | Active occupancy persists beyond plan end; delayed source invalidation opens disruption; trip.started |
+| US07 | Custody/facts/readings | US05, US08–US14 | Trip/job/ledger revisions; incoming load before transition; job picked_up/delivered/returned or stop failure fact |
+| US08 | Terminal trip/resource release | US04, US06, US10, US12 | No current cargo invariant, separate resource release facts; no historical-ready-job deadlock; completed/resource_released |
+| US09 | Disruptions/attempts/promises | US05, US07–US10 | Preserve failed attempts and original promises; no status change merely on resolving disruption; disruption and promise events |
+| US10 | Custody across trips/resources | US04–US08, US10–US14 | Both trip and all job/resource locks in stable order; one receipt; handed_over/interrupted/released events |
+| US11 | Effective fact/ledger stream | US06–US14; branch or historical contradiction | Validate downstream consequences atomically; reject impossible correction; invalidate reconciliation; fact.corrected/mileage.corrected |
+| US12 | Effective legs/readings | US11, US13–US14 | Vehicle ledger revision + non-overlap; preserve unknown provenance; mileage.recorded |
+| US13 | Reviewed day envelope/completeness | US11–US14 | Expected ledger revision; recompute rather than trusting stale reviewed flag; vehicle_day.reconciled |
+| US14 | Cohort configuration, frozen comparison | US01, US11–US15 | Immutable cohort membership; no profile disable/deletion shortcut; derived results revise after ledger changes |
+| US15 | Browser filters/current scope only | All writes from board | No server domain mutation on navigation; cancel/ignore old scope reads; authoritative server checks on writes |
+| US16 | Effective ACL grants | All other stories | Request-time feature checks including replay/status lookup; UI guards are not authorization |
+
+No subscriber performs custody transfer, state transition or booking release. Events invalidate views/indexes only; there is no unbounded event-to-command loop. Operational commands remain authoritative even when refresh events are lost. Declared event catalogue also includes `logistics.stop.failed`, `logistics.vehicle_profile.updated`, `logistics.driver_profile.updated`, `logistics.cohort.frozen` for the corresponding new facts; ordinary CRUD uses standard module CRUD events where applicable.
+
+- [x] Sixteen stories have persona/surface, measurable success and happy/alternate/failure paths.
+- [x] Every story is represented in the cross-story impact matrix; missing recovery/release/correction paths included.
+- [ ] Independent story challenger passed.
 
 ## 6. User Story Gap Analysis `Architect`
 
-Pending Phase 3 and architect checkpoint 2.
+Capability ladder applied in order: existing feature → config/setup → sanctioned extension → workflow/notification primitive → new domain code. Stop at the first fit for each sub-capability; using new transport code does not justify rebuilding available authentication, tables or scheduling. References/commit definitions are in §4.5 and the commit ledger.
+
+| Story | First existing match; residual domain gap | Contributing atomic commits |
+|---|---|---|
+| US01 | Existing masters/editor; profile extension and UI | C01–C03, C09 (4; shared source adapter) |
+| US02 | CRUD reference/commands; transport input/state and job UI | C04–C05 (2) |
+| US03 | CrudForm/DataTable; ordered transport draft/load preview | C06–C07 (2) |
+| US04 | Command/transaction/lock helpers; atomic transport exclusivity and observed eligibility | C08–C10 (3) |
+| US05 | Versioned commands/forms; plan/promise history and atomic replacement | C10 (1, reuses C06/C08) |
+| US06 | Guards/command bus; physical departure/occupancy UI | C11–C12 (2) |
+| US07 | Standard action dialog; custody facts and leg boundary | C11–C12, C17 (3) |
+| US08 | Same execution capability; no new release engine | C11–C12 (shared, 0 extra) |
+| US09 | Existing detail/CRUD components; domain disruption and attempts | C13 (1, reuses C10) |
+| US10 | Forms/command guards; whole-job transfer and recovery UI | C14–C15 (2) |
+| US11 | Conflict helpers/audit; typed correction and effective-history validation | C16 (1, complexity risk: may split after feature audit) |
+| US12 | Existing forms; actual ledger and non-trip provenance | C17 (1) |
+| US13 | Existing table/detail; reconciliation rules and UI | C18 (1, complexity risk: may split) |
+| US14 | Existing configuration/forms/KPI; frozen cohort and ratio rules | C19–C20 (2) |
+| US15 | Existing schedule/table/KPI/filter blocks; board projections/composition/refresh | C21–C23 (3) |
+| US16 | Existing auth/role configuration; additive logistics declarations | 0 standalone; declarations/tests included in owning C-items and C24 |
+
+C24–C25 add cross-flow verification/deployment documentation; union remains 25, not the sum of story rows. US01/US04/US07/US15 were rechecked because ≥3 commits: existing masters, scheduling, events and UI cover scaffolding, but not owned transport profiles, custody or authoritative booking/mileage projections. Workflow automation adds no benefit to these synchronous operator actions; defer that dependency until a real async approval/notification requirement exists. C16/C18 estimates need readiness review because corrections/reconciliation can exceed one focused loop; increasing estimate is preferable to dropping invariants.
+
+No platform-scoped commit is proposed, so no external tracker claim is needed for this mapping. A later architect finding requiring a platform change must be investigated read-only and recorded as a dependency; it cannot be disguised as app work.
+
+- [x] Every story mapped through capability ladder with shared work deduplicated.
+- [ ] Architect checkpoint 2 passed; any new dependencies resolved.
 
 ## 7. Phasing & Rollout `PM`
 
@@ -389,11 +488,68 @@ Navigation foundation: implemented with [recorded verification](../../docs/logis
 
 ## API Contracts / Migration & Backward Compatibility
 
-Pending detailed mapping. Proposed additions only; preserve existing seven URLs, logistics.view semantics and platform interfaces. Mutable entities require updatedAt, version-aware update/delete and guarded action endpoints. Existing records need no transport backfill; new tables/migrations and snapshots ship together when implementation is authorized. Applying migrations requires separate authorization.
+All paths below are **proposed additions**, not existing endpoints. Each exports OpenAPI in implementation. GET lists are scoped/paginated at pageSize≤100, with detail selection by id under the same authorization. Do not expose generic writes to internal facts, memberships, observations, receipts or reservations. Public lifecycle writes take typed action payloads and expected aggregate versions; requestId accompanies state-changing actions and creation where duplicate input would create duplicates. Responses include affected record IDs/updatedAt and a command receipt reference. GET command status must apply current authorization and scope.
+
+| Contract | Proposed path / methods | Business boundary | Integration coverage |
+|---|---|---|---|
+| A01 profiles | `/api/logistics/vehicle-profiles`, `/driver-profiles`: GET/POST/PUT | Master IDs + dispatch fields; no master edits | LOG-OP-01, 02, 14 |
+| A02 jobs | `/api/logistics/jobs`: GET/POST/PUT | Create/edit drafts/ready constraints only; assigned edits use replan | LOG-OP-02, 14 |
+| A03 job actions | `/api/logistics/jobs/[id]/accept`, `/cancel`, `/promise`: POST | Valid transitions; assigned promise/cancel routes delegate to equivalent atomic plan operation or reject with required action | LOG-OP-02, 05, 09 |
+| A04 trips | `/api/logistics/trips`: GET/POST/PUT | Draft plan editing only; immutable confirmed history | LOG-OP-03, 14 |
+| A05 plan actions | `/api/logistics/trips/[id]/confirm`, `/replan`, `/unassign`, `/cancel`, `/release-job`: POST | Complete booking/membership transaction; different pre/post-start rules | LOG-OP-03, 04, 05, 08 |
+| A06 execution | `/api/logistics/trips/[id]/start`, `/facts`, `/finish`: POST | Typed physical fact, custody, occupancy and missing readings | LOG-OP-06, 07, 08 |
+| A07 recovery | `/api/logistics/trips/[id]/handover`, `/interrupt`, `/release-resource`: POST | Manager feature combinations; explicit custody/physical release | LOG-OP-09, 10 |
+| A08 disruptions | `/api/logistics/disruptions`: GET/POST; `/[id]/resolve`: POST | Description and typed resolution references; no automatic custody release | LOG-OP-09, 14 |
+| A09 corrections | `/api/logistics/facts/[id]/correct`, `/mileage/legs/[id]/correct`: POST | Typed replacement/void, evidence and stream version | LOG-OP-10, 11 |
+| A10 mileage legs | `/api/logistics/mileage/legs`: GET/POST | Non-trip entry/missing boundary completion; load not freely editable | LOG-OP-11, 12 |
+| A11 vehicle days | `/api/logistics/mileage/days`: GET/POST/PUT; `/[id]/reconcile`: POST | Versioned envelopes; corrections audited; completeness derived | LOG-OP-12 |
+| A12 measurement | `/api/logistics/measurement/cohorts`: GET/POST/PUT; `/[id]/freeze`: POST; `/settings`: GET/PUT | Immutable ledger timezone after first record; frozen cohort cannot be edited | LOG-OP-13, 14 |
+| A13 statistics | `/api/logistics/statistics`: GET | Date/cohort inputs; authoritative formula/coverage/ledger revision | LOG-OP-13, 15 |
+| A14 board | `/api/logistics/dashboard`: GET | Counts, dated trips, open obligations; complete scoped aggregates | LOG-OP-15 |
+| A15 selectors | `/api/logistics/dispatch-options`: GET | Minimal authorized master candidates and observed availability; no broad staff payload | LOG-OP-01, 04, 14 |
+| A16 outcome | `/api/logistics/commands/[requestId]`: GET | Current actor/action/scope authorized committed receipt lookup; no token-only access | LOG-OP-07, 14 |
+
+Mutation responses distinguish validation (400/422), scope/access (platform 401/403 or nondisclosing 404), stale versions/domain conflicts (409) and temporary unavailable source (503 with retry guidance). A post-commit side-effect failure cannot be reported as a safely rolled-back action; use committed receipt or unknown-outcome reconciliation. Generic PUT cannot skip lifecycle guards. API error bodies use existing conflict/error contracts and translated user messages.
+
+**Migration & Backward Compatibility:** preserve seven URLs, logistics.view read-only semantics, existing feature IDs, event IDs and import paths. Add new module entities/APIs/features/events; no existing source-table changes, relations or data backfill. Keep historical planned pages' access behavior and convert only implemented sections to real empty states. Ship generated migrations and snapshots after entities; generate discovery registries through `yarn generate`, never by hand. Mirror app/template changes using existing template sync rules where applicable. Existing tenants need explicit logistics write grants and supporting source-read grants; ACL sync does not mean every existing logistics viewer becomes a dispatcher. No migration is applied to a developer/production database without separate authorization. Rollback must preserve new transport records and old read paths, not drop tables or falsify completed trips.
 
 ## Validation / Risks & Impact Review
 
-Pending workflow-level API/UI coverage and risk matrix. Spec-only work uses local link/content/diff checks; it must not claim application tests passed.
+Integration tests ship with their owning changes under `apps/mercato/src/modules/logistics/__integration__`, using the existing runner and `@open-mercato/core/helpers/integration/*`. Create scoped fixtures through APIs where possible and always clean them up; no seeded/demo dependency. Pure rule/unit tests cover exact arithmetic and transition predicates; integration tests prove actual API/transaction/UI behavior, not merely mocks of their implementation.
+
+| Coverage | Required API/UI proof |
+|---|---|
+| LOG-OP-01 | Profile master selection/creation, source read grants, absent module/service and unsupported/complete paginated rule sets; UI explains unknown availability |
+| LOG-OP-02 | Create draft/accept job, field constraints, duplicate retry, immutable accepted windows and ready queue |
+| LOG-OP-03 | Multi-job trip, intermediate load overflow, pickup order, final end, no reservations from abandoned draft |
+| LOG-OP-04 | Two parallel real requests competing for vehicle, driver and job; only one commits; adjacent intervals allowed, zero-length denied; replan rollback |
+| LOG-OP-05 | Changed promise/replan/unassign/cancel and historical snapshots; active unpicked release skips stops without finish deadlock |
+| LOG-OP-06 | Full create→accept→confirm→start→pickup→delivery→end workflow; late truthful facts, active overrun blocks later start |
+| LOG-OP-07 | Duplicate request, lost response and post-commit event failure; same request returns outcome, changed body conflicts; current access still required |
+| LOG-OP-08 | Physical finish with missing mileage and with all unpicked jobs released; onboard cargo prevents finish; separate release timing |
+| LOG-OP-09 | Failed pickup/release, failed delivery/retry next day with agreed promise, loaded return and disruption closure; no false delivery |
+| LOG-OP-10 | Two onboard jobs handed to recovery trip, failure for one rolls all back, concurrent second transfer, same-driver boundary, source interruption and history |
+| LOG-OP-11 | Fact/leg correction/void, two competing successors, wrong references, later-history contradiction rejection, downstream mileage/reconciliation invalidation |
+| LOG-OP-12 | Positioning/workshop/no-job day, no movement, unknown load, gaps/overlaps, missing midnight evidence, DST reporting-day boundaries, meter reset remains incomplete |
+| LOG-OP-13 | Exact E/T and relative reduction, fixed cohort, late baseline correction, immutable timezone, incomplete/no-distance result never shows improvement |
+| LOG-OP-14 | Every new method/path: unauthenticated/read-only/exact/wildcard/revoked roles, cross-tenant/org IDs and payload spoofing, current replay permission; safe absent-source execution |
+| LOG-OP-15 | Dashboard aggregates across >100 fixtures, count/list same filters, yesterday's active trip, released/skipped overdue exclusions, stale/error Retry, delayed/out-of-order cross-org responses, 30s refresh |
+| LOG-OP-16 | All existing seven nav URLs, new create/detail/settings routes, keyboard/mobile, five locales, empty versus planned state, direct URL guards and unchanged Customers navigation |
+
+**Master race test:** insert an unavailable source rule after eligibility observation but before assignment/start commit; prove observed versions/time are retained, booking exclusivity remains strong and next authoritative refresh detects review/disruption. Do not assert a cross-module serialization guarantee that is expressly excluded.
+
+**Implementation gate runner:** select Docker/local once per gate sequence per `.ai/docs/agent-instructions.md`; record chosen runner. Run the ordered `.ai/agentic.config.json` gate, focused operational integrations and actual UI QA. Existing recorded Windows full-suite limitations must be reported, not hidden by a small focused pass. Spec-only validation uses local relative-link, required-section and diff checks; no application build/test claim is made for this document.
+
+| Risk | Severity / effect | Mitigation | Residual risk |
+|---|---|---|---|
+| Booking race or duplicate custody | High / double dispatch or lost cargo | Transactional resource/job locks, receipts, versions and adversarial integration | Implementation must prove DB behavior, not just describe it |
+| Source master edit races with start | High / changed eligibility | Observed source snapshots, revalidation, refresh/disruption; no false linearizability claim | Narrow source-edit/start race remains and is visible policy |
+| Missing/estimated manual mileage | High / false efficiency claim | All cohort days, evidence, unknown flags, exact reconciliation | Night-work boundary collection may be burdensome; incomplete report remains possible |
+| Correction rewrites dependent history | High / corrupted custody/metrics | Typed successor, stream locks, reject contradictory repairs | Some mistaken histories need manual investigation before safe correction |
+| Post-commit event/response failure | Medium / duplicate operator action | Atomic receipt, current-authorized outcome lookup, authoritative refresh | UI may temporarily show unknown/stale outcome |
+| Scope or source-field leak | High / tenant/privacy exposure | Trusted scope, minimum projections, exact/wildcard tests | Requires end-to-end authorization tests for every proposed route |
+| Estimates too optimistic | Medium / incomplete release | 25 units are planning estimate; readiness audits may split C16/C18 | No delivery date promised; preserve complete workflow scope |
+| Routing/legal assumptions | High / unusable physical plan | Dispatcher confirmation; clear manual estimates and explicit exclusions | Human remains responsible for real-world feasibility |
 
 ## Final Compliance Report / Handoff
 
