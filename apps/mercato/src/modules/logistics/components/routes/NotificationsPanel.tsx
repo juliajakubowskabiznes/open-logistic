@@ -8,6 +8,7 @@ import { Button } from '@open-mercato/ui/primitives/button'
 import { EmptyState } from '@open-mercato/ui/primitives/empty-state'
 import type { BoardNotification } from '../../lib/routes-board'
 import type { BoardDecision } from './useRoutesBoard'
+import { vehicleLabel } from './RouteRow'
 
 export function NotificationsPanel({ notifications, selectedId, decidingId, error, onSelect, onDecide }: {
   notifications: BoardNotification[]
@@ -19,7 +20,7 @@ export function NotificationsPanel({ notifications, selectedId, decidingId, erro
 }) {
   const t = useT()
   const locale = useLocale()
-  const money = (value: number | null, currency: string) => value == null
+  const money = (value: number | null, currency: string) => value == null || value <= 0
     ? null
     : new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
   const time = (iso: string) => new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(new Date(iso))
@@ -79,6 +80,7 @@ export function NotificationsPanel({ notifications, selectedId, decidingId, erro
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {isCarrier ? notification.transportRoute : notification.route}
+                      {isCarrier && vehicleLabel(notification.route, t) ? ` · ${vehicleLabel(notification.route, t)}` : ''}
                       {cargo ? ` · ${cargo}` : ''}
                       {amount ? ` · ${amount}` : ''}
                       {' · '}{time(notification.occurredAt)}

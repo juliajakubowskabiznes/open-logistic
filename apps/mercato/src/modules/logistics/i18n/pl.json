@@ -317,5 +317,8 @@
   "logistics.aiInbox.offers.accepted": "Oferta dla {customer} zapisana.",
   "logistics.aiInbox.offers.acceptFailed": "Nie udało się zaakceptować oferty.",
   "logistics.aiInbox.offers.noPrice": "bez ceny",
-  "logistics.aiInbox.others.pending": "Inne akcje do przejrzenia: {count}"
+  "logistics.aiInbox.others.pending": "Inne akcje do przejrzenia: {count}",
+  "logistics.aiInbox.history.title": "Historia wiadomości",
+  "logistics.aiInbox.history.unknownSender": "Nieznany nadawca",
+  "logistics.aiInbox.history.empty": "Brak treści maila."
 }

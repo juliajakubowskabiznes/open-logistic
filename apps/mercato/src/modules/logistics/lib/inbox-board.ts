@@ -16,6 +16,24 @@ export type InboxProposalSummary = {
   pendingActionCount?: number
 }
 
+export type InboxThreadMessage = {
+  from?: { name?: string; email?: string } | null
+  date?: string | null
+  subject?: string | null
+  body?: string | null
+}
+
+/** The source email of a proposal, as returned by GET /api/inbox_ops/proposals/:id. */
+export type InboxEmailDetail = {
+  subject?: string | null
+  forwardedByName?: string | null
+  forwardedByAddress?: string | null
+  receivedAt?: string | null
+  cleanedText?: string | null
+  rawText?: string | null
+  threadMessages?: InboxThreadMessage[] | null
+}
+
 export type InboxAction = {
   id: string
   actionType: string

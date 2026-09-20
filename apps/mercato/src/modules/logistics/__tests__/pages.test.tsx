@@ -69,18 +69,16 @@ describe('Logistics navigation foundation', () => {
     expect(setup.defaultRoleFeatures?.admin).toContain('logistics.view')
   })
 
-  test('shows the three logistics-owned operational routes in the sidebar', () => {
+  test('shows only AI inbox and AI routes in the sidebar', () => {
     const visiblePages = pages.filter(({ metadata }) => !('navHidden' in metadata && metadata.navHidden))
     expect(visiblePages.map(({ path }) => path)).toEqual([
       '/backend/logistics/ai-inbox',
       '/backend/logistics/transports',
-      '/backend/logistics/proposals-disruptions',
     ])
-    expect(visiblePages.map(({ metadata }) => metadata.pageOrder)).toEqual([10, 20, 40])
+    expect(visiblePages.map(({ metadata }) => metadata.pageOrder)).toEqual([10, 20])
     expect(visiblePages.map(({ metadata }) => metadata.pageTitleKey)).toEqual([
       'logistics.dispatcher.inbox',
       'logistics.dispatcher.transports',
-      'logistics.proposalsDisruptions.title',
     ])
   })
 

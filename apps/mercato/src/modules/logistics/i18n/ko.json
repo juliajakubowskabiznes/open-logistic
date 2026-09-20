@@ -317,5 +317,8 @@
   "logistics.aiInbox.offers.accepted": "Offer for {customer} saved.",
   "logistics.aiInbox.offers.acceptFailed": "Could not accept the offer.",
   "logistics.aiInbox.offers.noPrice": "no price",
-  "logistics.aiInbox.others.pending": "Other actions to review: {count}"
+  "logistics.aiInbox.others.pending": "Other actions to review: {count}",
+  "logistics.aiInbox.history.title": "Message history",
+  "logistics.aiInbox.history.unknownSender": "Unknown sender",
+  "logistics.aiInbox.history.empty": "No email content."
 }

@@ -6,13 +6,13 @@ import { useOrganizationScopeVersion } from '@open-mercato/shared/lib/frontend/u
 import { apiCall, apiCallOrThrow, withScopedApiRequestHeaders } from '@open-mercato/ui/backend/utils/apiCall'
 import { buildOptimisticLockHeader } from '@open-mercato/ui/backend/utils/optimisticLock'
 import { flash } from '@open-mercato/ui/backend/FlashMessages'
-import { splitInbox, type InboxAction, type InboxBoard, type InboxProposalSummary, type OfferCard, type ReplyCard } from '../../lib/inbox-board'
+import { splitInbox, type InboxAction, type InboxBoard, type InboxEmailDetail, type InboxProposalSummary, type OfferCard, type ReplyCard } from '../../lib/inbox-board'
 
 export const INBOX_POLL_MS = 10000
 const PAGE_SIZE = 50
 
 type ActionWithVersion = InboxAction & { updatedAt?: string }
-type ProposalDetail = { proposal: InboxProposalSummary; actions: ActionWithVersion[] }
+type ProposalDetail = { proposal: InboxProposalSummary; actions: ActionWithVersion[]; email: InboxEmailDetail | null }
 type AcceptResponse = { ok: boolean; error?: string; action?: { createdEntityId?: string | null; createdEntityType?: string | null } | null }
 
 /** Both open statuses: `partial` is a proposal where some actions were already handled. */
@@ -36,6 +36,7 @@ export function useInboxBoard() {
   const scopeVersion = useOrganizationScopeVersion()
   const [proposals, setProposals] = React.useState<InboxProposalSummary[]>([])
   const [actions, setActions] = React.useState<Record<string, ActionWithVersion[] | undefined>>({})
+  const [emails, setEmails] = React.useState<Record<string, InboxEmailDetail | null | undefined>>({})
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [busyId, setBusyId] = React.useState<string | null>(null)
@@ -46,11 +47,12 @@ export function useInboxBoard() {
       const items = await fetchOpenProposals(signal)
       const details = await Promise.all(items.map(async (item) => {
         const call = await apiCallOrThrow<ProposalDetail>(`/api/inbox_ops/proposals/${item.id}`, { signal })
-        return [item.id, call.result?.actions ?? []] as const
+        return [item.id, call.result?.actions ?? [], call.result?.email ?? null] as const
       }))
       if (signal?.aborted) return
       setProposals(items)
-      setActions(Object.fromEntries(details))
+      setActions(Object.fromEntries(details.map(([id, list]) => [id, list])))
+      setEmails(Object.fromEntries(details.map(([id, , email]) => [id, email])))
       setError(null)
     } catch (loadError) {
       if (signal?.aborted || (loadError instanceof Error && loadError.name === 'AbortError')) return
@@ -147,5 +149,5 @@ export function useInboxBoard() {
 
   const board = React.useMemo<InboxBoard>(() => splitInbox(proposals, actions), [proposals, actions])
 
-  return { board, loading, error, busyId, reload, acceptOffer, rejectAction, sendReply }
+  return { board, emails, loading, error, busyId, reload, acceptOffer, rejectAction, sendReply }
 }

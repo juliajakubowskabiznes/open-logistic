@@ -27,7 +27,7 @@ function formatCargo(pallets: number | null, kg: number | null, locale: string):
 }
 
 function formatMoney(value: number | null, currencyCode: string, locale: string): string | null {
-  if (value == null) return null
+  if (value == null || value <= 0) return null
   return new Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode, maximumFractionDigits: 0 }).format(value)
 }
 
@@ -57,6 +57,12 @@ function OrderPill({ title, route, cargo, price, pending, href, primary }: {
     </>
   )
   return href ? <a href={href} className={className}>{body}</a> : <span className={className}>{body}</span>
+}
+
+/** Seeded vehicle types are stored as i18n keys (`logistics.dispatcher.vehicle.*`); free text stays as is. */
+export function vehicleLabel(value: string | null, t: (key: string) => string): string | null {
+  if (!value) return null
+  return value.startsWith('logistics.') ? t(value) : value
 }
 
 export function RouteRow({ item, selected, onSelect }: {
@@ -89,7 +95,7 @@ export function RouteRow({ item, selected, onSelect }: {
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{item.carrier.name}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {[item.carrier.vehicleType, formatMoney(item.carrier.cost, item.currencyCode, locale)].filter(Boolean).join(' · ') || t('logistics.board.carrier.noDetails')}
+                {[vehicleLabel(item.carrier.vehicleType, t), formatMoney(item.carrier.cost, item.currencyCode, locale)].filter(Boolean).join(' · ') || t('logistics.board.carrier.noDetails')}
               </p>
               <StatusBadge variant={statusVariant(item.carrier.status)} dot className="mt-1">
                 {t(`logistics.status.${item.carrier.status}`)}
