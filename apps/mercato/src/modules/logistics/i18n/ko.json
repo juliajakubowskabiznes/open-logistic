@@ -158,7 +158,7 @@
   "logistics.transports.filters.carrierStatus": "운송사 상태",
   "logistics.transports.search": "주문, 고객 및 경로 검색…",
   "logistics.transports.title": "AI 운송",
-  "logistics.transport.decisions": "결정 및 이용 가능한 제안",
+  "logistics.transport.decisions": "결정",
   "logistics.transport.rejectLoad": "추가 화물 거절",
   "logistics.dispatcher.errors.salesSetupRequired": "운송을 관리하기 전에 Sales를 설정하세요.",
   "logistics.dispatcher.errors.carrierAlreadyProposed": "운송업체 제안이 이미 존재합니다.",

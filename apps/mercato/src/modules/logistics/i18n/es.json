@@ -158,7 +158,7 @@
   "logistics.transports.filters.carrierStatus": "Estado del transportista",
   "logistics.transports.search": "Buscar pedidos, clientes y rutas…",
   "logistics.transports.title": "Transportes IA",
-  "logistics.transport.decisions": "Decisiones y ofertas disponibles",
+  "logistics.transport.decisions": "Decisiones",
   "logistics.transport.rejectLoad": "Rechazar carga adicional",
   "logistics.dispatcher.errors.salesSetupRequired": "Configure Sales antes de gestionar transportes.",
   "logistics.dispatcher.errors.carrierAlreadyProposed": "Ya existe una propuesta de transportista.",

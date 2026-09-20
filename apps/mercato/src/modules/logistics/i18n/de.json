@@ -158,7 +158,7 @@
   "logistics.transports.filters.carrierStatus": "Frachtführerstatus",
   "logistics.transports.search": "Aufträge, Kunden und Routen suchen…",
   "logistics.transports.title": "KI-Transporte",
-  "logistics.transport.decisions": "Entscheidungen und verfügbare Angebote",
+  "logistics.transport.decisions": "Entscheidungen",
   "logistics.transport.rejectLoad": "Zusatzladung ablehnen",
   "logistics.dispatcher.errors.salesSetupRequired": "Konfigurieren Sie Sales, bevor Sie Transporte verwalten.",
   "logistics.dispatcher.errors.carrierAlreadyProposed": "Ein Frachtführervorschlag ist bereits vorhanden.",

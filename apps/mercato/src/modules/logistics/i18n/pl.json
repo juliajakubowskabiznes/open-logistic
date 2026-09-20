@@ -158,7 +158,7 @@
   "logistics.transports.filters.carrierStatus": "Status przewoźnika",
   "logistics.transports.search": "Szukaj zleceń, klientów i tras…",
   "logistics.transports.title": "AI Trasy",
-  "logistics.transport.decisions": "Decyzje i dostępne oferty",
+  "logistics.transport.decisions": "Decyzje",
   "logistics.transport.rejectLoad": "Odrzuć doładunek",
   "logistics.dispatcher.errors.salesSetupRequired": "Skonfiguruj moduł Sales przed zarządzaniem przewozami.",
   "logistics.dispatcher.errors.carrierAlreadyProposed": "Propozycja przewoźnika już istnieje.",

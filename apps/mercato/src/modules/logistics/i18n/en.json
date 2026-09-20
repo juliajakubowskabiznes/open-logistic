@@ -158,7 +158,7 @@
   "logistics.transports.filters.carrierStatus": "Carrier status",
   "logistics.transports.search": "Search orders, customers and routes…",
   "logistics.transports.title": "AI Routes",
-  "logistics.transport.decisions": "Decisions and available offers",
+  "logistics.transport.decisions": "Decisions",
   "logistics.transport.rejectLoad": "Reject additional load",
   "logistics.dispatcher.errors.salesSetupRequired": "Configure Sales before managing transports.",
   "logistics.dispatcher.errors.carrierAlreadyProposed": "A carrier proposal already exists.",
